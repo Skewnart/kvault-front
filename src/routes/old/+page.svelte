@@ -1,7 +1,7 @@
 <script lang="ts">
+	import Counter from './Counter.svelte';
 	import welcome from '$lib/images/svelte-welcome.webp';
 	import welcomeFallback from '$lib/images/svelte-welcome.png';
-	import '../app.css';
 </script>
 
 <svelte:head>
@@ -17,12 +17,15 @@
 				<img src={welcomeFallback} alt="Welcome" />
 			</picture>
 		</span>
+
 		to your new<br />SvelteKit app
 	</h1>
 
 	<h2>
-		Go to default : <strong><a href="/old">/old</a></strong>
+		try editing <strong>src/routes/+page.svelte</strong>
 	</h2>
+
+	<Counter />
 </section>
 
 <style>
