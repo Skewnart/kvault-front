@@ -7,17 +7,38 @@ on:
       - main
 
 jobs:
-
   build:
-    name: build & tests
     runs-on: ubuntu-latest
 
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      - name: setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: install dependencies
         run: npm install
+
       - name: build
         run: npm run build
+
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: install dependencies
+        run: npm install
+        
       - name: test
         run: npm run test
