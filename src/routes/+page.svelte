@@ -21,7 +21,7 @@
 	</h1>
 
 	<h2>
-		Go to default : <strong><a href="/old">/old</a></strong>
+		Go to default : <strong><a href="/old">/old</a></strong>.
 	</h2>
 </section>
 
