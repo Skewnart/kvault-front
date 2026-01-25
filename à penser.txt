@@ -1,0 +1,4 @@
+register : il faut qu'un admin accepte la demande (statut : registering)
+	    trois demandes max simultanées (pour éviter de bourrer)
+
+connexion : anti brute force (statut : blocked)
