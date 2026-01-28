@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import "../../app.css";
+	// L'appel API se fait désormais côté serveur via l'action
 
 	const TITLE = "Connexion";
-	const GOOD_USERNAME = "user"; // temp
-	const GOOD_PASSWORD = "password"; //temp
+	const GOOD_USERNAME = "aze"; // temp
 
 	let username = $state('');
 	let password = $state('');
@@ -13,23 +13,32 @@
 	let showPassword = $state(false);
 	let logged_in = $state(false);
 
-	function onsubmit() {
+	async function onsubmit(event: Event) {
 		error = "";
+		event.preventDefault();
 
 		if (!showPassword) {
+			// Ici tu peux éventuellement faire une vérification côté front, ou appeler une API si besoin
 			if (username == GOOD_USERNAME) {
 				showPassword = true;
-			}
-			else {
+			} else {
 				error = "Utilisateur inconnu";
 			}
-		}
-		else {
-			if (username == GOOD_USERNAME && password == GOOD_PASSWORD) {
-				logged_in = true;
-			}
-			else {
-				error = "Mot de passe erroné";
+		} else {
+			try {
+				const response = await fetch('/login', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ username, password })
+				});
+				const result = await response.json();
+				if (result.success) {
+					logged_in = true;
+				} else {
+					error = result.message || "Mot de passe erroné";
+				}
+			} catch (e) {
+				error = "Erreur réseau";
 			}
 		}
 	}
