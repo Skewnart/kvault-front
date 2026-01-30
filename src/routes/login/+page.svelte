@@ -2,7 +2,8 @@
 
 	import { fade } from 'svelte/transition';
 	import "../../app.css";
-    import { login } from '$lib/api';
+    import { login, set_token } from '$lib/api';
+    import { goto } from '$app/navigation';
 
 	const TITLE = "Connexion";
 
@@ -12,8 +13,6 @@
 	let error = $state("");
 	let callPending = $state(false);
 	let showPassword = $state(false);
-	let logged_in = $state(false);
-	let token_result = $state("");
 
 	async function onsubmit(event: Event) {
 		error = "";
@@ -37,27 +36,20 @@
 
 		} else {
 			try {
-				const response = await login(username, password)
+				const response = await login(username, password);
 				if (response.status === 200) {
-					logged_in = true;
-
-					response.text().then(function (text) {
-						token_result = text;
-						console.log("token_result",token_result);
-
-						fetch(`/cookies`, {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-							body: `token=${token_result}`
+					response.text().then(function (token) {
+						set_token(token).then(() => {
+							callPending = false;
+							goto('/');
 						});
 					});
 				} else {
 					error = "Mot de passe erroné";
+					callPending = false;
 				}
 			} catch (e) {
 				error = "Erreur réseau";
-			}
-			finally {
 				callPending = false;
 			}
 		}
@@ -143,10 +135,6 @@
 
 			{#if error}
 				<p class="text-error text-center mt-4" transition:fade>{error}</p>
-			{/if}
-
-			{#if logged_in}
-				<h2 class="text-success text-center mt-4">Hello {username}!</h2>
 			{/if}
 		</div>
 	</div>

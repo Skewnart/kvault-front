@@ -7,3 +7,12 @@ export async function login(username: string, password: string) : Promise<Respon
 		body: JSON.stringify({ username, password })
 	});
 }
+
+export async function set_token(token: string) : Promise<Response> {
+	return fetch(`/cookies`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+		body: `token=${token}`
+	});
+}
+
