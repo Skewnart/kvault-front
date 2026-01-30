@@ -1,35 +1,59 @@
 <script lang="ts">
+
 	import { fade } from 'svelte/transition';
 	import "../../app.css";
+    import { login } from '$lib/api';
 
 	const TITLE = "Connexion";
-	const GOOD_USERNAME = "user"; // temp
-	const GOOD_PASSWORD = "password"; //temp
 
 	let username = $state('');
 	let password = $state('');
 
 	let error = $state("");
+	let callPending = $state(false);
 	let showPassword = $state(false);
 	let logged_in = $state(false);
+	let token_result = $state("");
 
-	function onsubmit() {
+	async function onsubmit(event: Event) {
 		error = "";
+		callPending = true;
+		event.preventDefault();
 
 		if (!showPassword) {
-			if (username == GOOD_USERNAME) {
-				showPassword = true;
+			try {
+				const response = await login(username, "");
+				if (response.status === 204) {
+					showPassword = true;
+				} else {
+					error = "Utilisateur inconnu";
+				}
+			} catch (e) {
+				error = "Erreur réseau";
 			}
-			else {
-				error = "Utilisateur inconnu";
+			finally {
+				callPending = false;
 			}
-		}
-		else {
-			if (username == GOOD_USERNAME && password == GOOD_PASSWORD) {
-				logged_in = true;
+
+		} else {
+			try {
+				const response = await login(username, password)
+				if (response.status === 200) {
+					logged_in = true;
+
+					response.text().then(function (text) {
+						token_result = text;
+						console.log("token_result",token_result);
+
+					});
+				} else {
+					error = "Mot de passe erroné";
+				}
+			} catch (e) {
+				error = "Erreur réseau";
 			}
-			else {
-				error = "Mot de passe erroné";
+			finally {
+				callPending = false;
 			}
 		}
 	}
@@ -103,8 +127,12 @@
 					</div>
 				{/if}
 
-				<button class="btn btn-primary w-full" type="submit">
-					{showPassword ? 'Connexion' : 'Suivant'}
+				<button class="btn btn-primary w-full" type="submit" disabled={callPending}>
+					{#if callPending}
+						<span class="loading loading-dots loading-xl"></span>
+					{:else}
+						{showPassword ? 'Connexion' : 'Suivant'}
+					{/if}
 				</button>
 			</form>
 
