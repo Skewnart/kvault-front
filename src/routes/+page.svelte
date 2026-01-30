@@ -19,10 +19,6 @@
 		</span>
 		to your new<br />SvelteKit app
 	</h1>
-
-	<h2>
-		Go to default : <strong><a href="/old">/old</a></strong>.
-	</h2>
 </section>
 
 <style>
