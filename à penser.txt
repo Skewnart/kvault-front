@@ -1,0 +1,16 @@
+register : il faut qu'un admin accepte la demande (statut : registering)
+	    trois demandes max simultanées (pour éviter de bourrer)
+
+connexion : anti brute force (statut : blocked)
+
+
+
+back : implémenter le cors dans la config
+	+ readme
+	fmt
+	clippy
+	Faire des commits séparés pour un patch
+
+front : supprimer les trucs inutiles
+
+gestion de révocation de token
