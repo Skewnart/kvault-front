@@ -45,6 +45,11 @@
 						token_result = text;
 						console.log("token_result",token_result);
 
+						fetch(`/cookies`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+							body: `token=${token_result}`
+						});
 					});
 				} else {
 					error = "Mot de passe erroné";
