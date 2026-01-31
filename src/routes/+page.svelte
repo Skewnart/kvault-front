@@ -1,52 +1,24 @@
 <script lang="ts">
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcomeFallback from '$lib/images/svelte-welcome.png';
 	import '../app.css';
+	
+	const TITLE = "Kvault";
+
 </script>
 
 <svelte:head>
-	<title>Home</title>
+	<title>{{TITLE}}</title>
 	<meta name="description" content="Svelte demo app" />
 </svelte:head>
 
-<section>
-	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcomeFallback} alt="Welcome" />
-			</picture>
-		</span>
-		to your new<br />SvelteKit app
-	</h1>
-</section>
-
-<style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 0.6;
-	}
-
-	h1 {
-		width: 100%;
-	}
-
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
-	}
-</style>
+<div class="bg-base-200 drawer lg:drawer-open">
+	<input id="drawer" type="checkbox" class="drawer-toggle">
+	<div class="drawer-content">
+		<div class="relative max-w-[100vw] px-6 pb-16 xl:pe-2">
+			
+		</div>
+	</div>
+	<div class="drawer-side z-40" style="scroll-behavior: smooth; scroll-padding-top: 5rem;">
+		<label for="drawer" class="drawer-overlay" aria-label="Close menu"></label>
+		<aside class="bg-base-100 min-h-screen w-80"></aside>
+	</div>
+</div>
