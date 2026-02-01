@@ -89,7 +89,7 @@
 							autocomplete="username"
 							type="text"
 							placeholder="Utilisateur"
-							disabled={showPassword}
+							disabled={showPassword || callPending}
 							bind:value={username}
 							autofocus
 						/>
@@ -119,6 +119,7 @@
 								placeholder="Mot de passe"
 								bind:value={password}
 								use:giveFocus
+								disabled={callPending}
 							/>
 						</label>
 					</div>
