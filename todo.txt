@@ -1,0 +1,48 @@
+register : il faut qu'un admin accepte la demande (statut : registering) 
+		type à l'utilisateur ?
+	    trois demandes max simultanées (pour éviter de bourrer)
+
+connexion : anti brute force (statut : blocked)
+
+
+Gestion de révocation de token
+Barre de recherche
+Gestion des dossiers
+Gestion de favoris
+
+Il faut pouvoir naviguer avec le clavier partout dans l'appli
+L'affichage d'un mot de passe ne doit durer que quelques secondes
+
+
+
+Stockage de mdp sur un serveur avec un KEM (Key Encapsulation Mechanism)
+
+CREATION COMPTE :
+
+Choisit un master password (m_pwd)
+Dérivation m_pwd (enc_m_pwd = m_pwd + salt)
+Créa clés KYBER ((pk, sk) = KYBER.keypair())
+Chiffrement sk (enc_sk = AES-GCM sk + enc_m_pwd)
+
+Envoi au serveur de (user_id, pk, enc_sk)
+
+
+CREATION ENTRY :
+
+Reception (pk)
+Entre le pwd entry (pwd)
+Crée une chaine aléatoire de 256 octets (k_pwd)
+Chiffrement pwd (enc_pwd = AES-GCM pwd + k_pwd)
+Chiffrement k_pwd (enc_k_pwd = KYBER k_pwd + pk)
+
+Envoi au serveur de (entry_metadata, enc_pwd, enc_k_pwd)
+
+
+LECTURE ENTRY :
+
+Reception (entry_metadata, enc_pwd, enc_k_pwd, enc_sk)
+Dérivation m_pwd (enc_m_pwd = m_pwd + salt)
+Déchiffr sk (sk = ~AES enc_sk + enc_m_pwd)
+Déchiffr k_pwd (k_pwd = ~KYBER enc_k_pwd + sk)
+Déchiffr pwd (pwd = ~AES enc_pwd + k_pwd)
+

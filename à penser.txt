@@ -1,8 +1,0 @@
-register : il faut qu'un admin accepte la demande (statut : registering) 
-		type à l'utilisateur ?
-	    trois demandes max simultanées (pour éviter de bourrer)
-
-connexion : anti brute force (statut : blocked)
-
-
-gestion de révocation de token
