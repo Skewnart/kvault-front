@@ -7,5 +7,7 @@ export function load({ cookies }) {
 	    redirect(303, '/login');
 	}
 
-	return {};
+	const data = {};
+
+	return data;
 }
