@@ -11,34 +11,36 @@
 	let folders = $state<FolderDTO[] | undefined>(undefined);
 
 	if (!props.data) {
-		error = "No data ?";
+		error = "Erreur pendant le chargement des données sur le serveur";
 	}
 	const data = props.data;
 
 	if (data.token == undefined) {
-		error = "No token ?";
+		error = "Le token n'est pas présent depuis le chargement de la page.";
 	}
 	const token = data.token;
-
+	
+	//TODO remplacer tout le onmount par un truc plus générique
 	onMount(() => {
-		setTimeout(() => {
-			fetch(`${PUBLIC_API_URL}/folder`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${token}`
-				}
-			}).then(response => {
-				if (!response.ok) {
-					error = `${response.status}. Failed to fetch folders`;
-				}
-				
-				response.json().then(json => {
-					folders = json;
-					console.log("folders", folders);
-				});
+		fetch(`${PUBLIC_API_URL}/folder`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`
+			}
+		}).then(response => {
+			if (!response.ok) {
+				error = `${response.status}. Erreur pendant le chargement des données.`;
+			}
+			
+			response.json()
+			.then(json => {
+				folders = json;
+			})
+			.catch(err => {
+				error = `${err}`;
 			});
-		}, 2000);
+		});
 	});
 
 </script>
@@ -63,12 +65,16 @@
   </div>
 </div>
 
-
 <div class="flex justify-center">
 	<div class="md:w-3/4 w-full pt-4">
 		
 		{#if error}
-			<div><p>{error}</p></div>
+			<div role="alert" class="alert alert-error">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+				</svg>
+				<span>{error}</span>
+			</div>
 		{/if}
 
 		{#if folders}
@@ -84,12 +90,12 @@
 						<div>
 							<div>{folder.name}</div>
 							<div class="text-xs uppercase font-semibold opacity-60">Todo : description</div>
-						</div><button class="btn btn-square btn-ghost" aria-label="edit-TODO-ID">
+						</div><button class="btn btn-square btn-ghost" aria-label="folder-edit-{folder.id}">
 							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="black" width="16px" height="16px" viewBox="0 0 24 24">
 								<path fill-rule="evenodd" clip-rule="evenodd" d="M20.8477 1.87868C19.6761 0.707109 17.7766 0.707105 16.605 1.87868L2.44744 16.0363C2.02864 16.4551 1.74317 16.9885 1.62702 17.5692L1.03995 20.5046C0.760062 21.904 1.9939 23.1379 3.39334 22.858L6.32868 22.2709C6.90945 22.1548 7.44285 21.8693 7.86165 21.4505L22.0192 7.29289C23.1908 6.12132 23.1908 4.22183 22.0192 3.05025L20.8477 1.87868ZM18.0192 3.29289C18.4098 2.90237 19.0429 2.90237 19.4335 3.29289L20.605 4.46447C20.9956 4.85499 20.9956 5.48815 20.605 5.87868L17.9334 8.55027L15.3477 5.96448L18.0192 3.29289ZM13.9334 7.3787L3.86165 17.4505C3.72205 17.5901 3.6269 17.7679 3.58818 17.9615L3.00111 20.8968L5.93645 20.3097C6.13004 20.271 6.30784 20.1759 6.44744 20.0363L16.5192 9.96448L13.9334 7.3787Z" fill="#0F0F0F"/>
 							</svg>
 						</button>
-						<button class="btn btn-square btn-ghost" aria-label="open-TODO-ID">
+						<button class="btn btn-square btn-ghost" aria-label="folder-open-{folder.id}">
 							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="black" width="16px" height="16px" viewBox="0 0 24 24">
 								<path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 							</svg>
@@ -98,7 +104,9 @@
 				{/each}
 			</ul>
 		{:else}
-			<p>Loading...</p>
+			<div class="flex justify-center">
+				<span class="loading loading-spinner text-primary"></span>
+			</div>
 		{/if}
 	</div>
 </div>
