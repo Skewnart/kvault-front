@@ -1,10 +1,45 @@
 <script lang="ts">
+    import { PUBLIC_API_URL } from '$env/static/public';
     import type { FolderDTO } from '$lib/models/folder_dto';
+    import { onMount } from 'svelte';
 	import '../../app.css';
 	
 	const TITLE = "Kvault";
-	
-	export let data: {folders: FolderDTO[]} | undefined;
+
+	const props = $props();
+	let error = $state("");
+	let folders = $state<FolderDTO[] | undefined>(undefined);
+
+	if (!props.data) {
+		error = "No data ?";
+	}
+	const data = props.data;
+
+	if (data.token == undefined) {
+		error = "No token ?";
+	}
+	const token = data.token;
+
+	onMount(() => {
+		setTimeout(() => {
+			fetch(`${PUBLIC_API_URL}/folder`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				}
+			}).then(response => {
+				if (!response.ok) {
+					error = `${response.status}. Failed to fetch folders`;
+				}
+				
+				response.json().then(json => {
+					folders = json;
+					console.log("folders", folders);
+				});
+			});
+		}, 2000);
+	});
 
 </script>
 
@@ -28,12 +63,18 @@
   </div>
 </div>
 
+
 <div class="flex justify-center">
 	<div class="md:w-3/4 w-full pt-4">
-		{#if data}
+		
+		{#if error}
+			<div><p>{error}</p></div>
+		{/if}
+
+		{#if folders}
 			<ul class="list bg-base-100 rounded-box shadow-md ">
 			<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Todo : Module de recherche</li>
-				{#each data.folders as folder}
+				{#each folders as folder}
 					<li class="list-row">
 						<div>
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-10" fill="none" viewBox="0 0 24 24">
