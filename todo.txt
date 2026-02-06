@@ -13,6 +13,8 @@ Gestion de favoris
 Il faut pouvoir naviguer avec le clavier partout dans l'appli
 L'affichage d'un mot de passe ne doit durer que quelques secondes
 
+Gérer le mot de passe d'invitation en paramétrage pour l'admin
+
 
 
 Stockage de mdp sur un serveur avec un KEM (Key Encapsulation Mechanism)
