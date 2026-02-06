@@ -5,6 +5,7 @@ export function load({ cookies }) {
 	const token = cookies.get('access_token');
     if (!token)
 	    redirect(303, '/login');
-
-	return {};
+	else {
+		redirect(303, '/folder');
+	}
 }
