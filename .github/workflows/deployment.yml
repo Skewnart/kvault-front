@@ -35,6 +35,8 @@ jobs:
         run: npm install
 
       - name: build
+        env:
+          PUBLIC_API_URL: ${{ secrets.ENV_PUBLIC_API_URL }}
         run: npm run build
         
       - name: test
