@@ -1,4 +1,4 @@
-register : il faut qu'un admin accepte la demande (statut : registering) 
+register : 
 		type à l'utilisateur ?
 	    trois demandes max simultanées (pour éviter de bourrer)
 
@@ -13,7 +13,12 @@ Gestion de favoris
 Il faut pouvoir naviguer avec le clavier partout dans l'appli
 L'affichage d'un mot de passe ne doit durer que quelques secondes
 
-Gérer le mot de passe d'invitation en paramétrage pour l'admin
+Gérer le mot de passe d'invitation en paramétrage pour l'admin (valable qu'une heure pour le faire au besoin)
+
+
+
+https://dev.to/jambochen/using-rust-webassembly-in-vite-react-a-modern-game-of-life-example-hde
+
 
 
 
