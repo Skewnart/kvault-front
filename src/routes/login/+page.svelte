@@ -5,6 +5,9 @@
     import { login, set_token } from '$lib/api';
     import { goto } from '$app/navigation';
 
+	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
+    import { onMount } from 'svelte';
+
 	const TITLE = "Connexion";
 
 	let username = $state('');
@@ -13,6 +16,11 @@
 	let error = $state("");
 	let callPending = $state(false);
 	let showPassword = $state(false);
+
+	onMount(async () => {
+		await wasm.default();
+		// wasm.greet("alert message");
+	});
 
 	async function onsubmit(event: Event) {
 		error = "";
