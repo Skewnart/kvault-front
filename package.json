@@ -10,7 +10,8 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "echo \"Soon !\""
+		"test": "echo \"Soon !\"",
+		"update_wasm": "cp -r ../kvault-wasm/wasm_pkg ./src/lib/"
 	},
 	"devDependencies": {
 		"@fontsource/fira-mono": "^5.0.0",
