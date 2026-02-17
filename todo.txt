@@ -20,6 +20,9 @@ Gérer le mot de passe d'invitation en paramétrage pour l'admin (valable qu'une
 https://dev.to/jambochen/using-rust-webassembly-in-vite-react-a-modern-game-of-life-example-hde
 
 
+https://docs.rs/argon2/latest/argon2/
+https://docs.rs/aes-gcm/latest/aes_gcm/
+https://docs.rs/pqc_kyber/latest/pqc_kyber/
 
 
 Stockage de mdp sur un serveur avec un KEM (Key Encapsulation Mechanism)

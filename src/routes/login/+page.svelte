@@ -20,6 +20,8 @@
 	onMount(async () => {
 		await wasm.default();
 		// wasm.greet("alert message");
+
+		console.log("call test_all_steps", wasm.test_all_steps("mot de passe"));
 	});
 
 	async function onsubmit(event: Event) {

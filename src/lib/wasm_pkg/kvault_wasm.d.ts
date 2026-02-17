@@ -1,16 +1,26 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export function generate_keypair(): void;
+
 export function greet(name: string): void;
+
+export function test_all_steps(password: string): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly generate_keypair: () => void;
     readonly greet: (a: number, b: number) => void;
+    readonly test_all_steps: (a: number, b: number) => [number, number, number, number];
+    readonly __wbindgen_exn_store: (a: number) => void;
+    readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+    readonly __externref_table_dealloc: (a: number) => void;
+    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_start: () => void;
 }
 
