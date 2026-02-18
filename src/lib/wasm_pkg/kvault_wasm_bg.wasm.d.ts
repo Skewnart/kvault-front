@@ -1,9 +1,25 @@
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
-export const generate_keypair: () => void;
-export const greet: (a: number, b: number) => void;
-export const test_all_steps: (a: number, b: number) => [number, number, number, number];
+export const __wbg_get_registerenvelope_enc_sk: (a: number) => [number, number];
+export const __wbg_get_registerenvelope_pk: (a: number) => [number, number];
+export const __wbg_get_registerenvelope_sk_nonce: (a: number) => [number, number];
+export const __wbg_registerenvelope_free: (a: number, b: number) => void;
+export const __wbg_set_registerenvelope_enc_sk: (a: number, b: number, c: number) => void;
+export const __wbg_set_registerenvelope_pk: (a: number, b: number, c: number) => void;
+export const __wbg_set_registerenvelope_sk_nonce: (a: number, b: number, c: number) => void;
+export const registerenvelope_new: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const __wbg_entry_free: (a: number, b: number) => void;
+export const __wbg_get_entry_enc_kyber: (a: number) => [number, number];
+export const __wbg_get_entry_enc_pwd: (a: number) => [number, number];
+export const __wbg_get_entry_pwd_nonce: (a: number) => [number, number];
+export const __wbg_set_entry_enc_kyber: (a: number, b: number, c: number) => void;
+export const __wbg_set_entry_enc_pwd: (a: number, b: number, c: number) => void;
+export const __wbg_set_entry_pwd_nonce: (a: number, b: number, c: number) => void;
+export const entry_new: (a: number, b: number, c: number, d: number, e: number, f: number) => number;
+export const create_entry: (a: number, b: number, c: number, d: number) => [number, number, number];
+export const generate_register_envelope: (a: number, b: number, c: number, d: number) => [number, number, number];
+export const read_entry: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number) => [number, number, number, number];
 export const __wbindgen_exn_store: (a: number) => void;
 export const __externref_table_alloc: () => number;
 export const __wbindgen_externrefs: WebAssembly.Table;

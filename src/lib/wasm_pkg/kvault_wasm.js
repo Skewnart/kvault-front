@@ -1,40 +1,255 @@
 /* @ts-self-types="./kvault_wasm.d.ts" */
 
-export function generate_keypair() {
-    wasm.generate_keypair();
+export class Entry {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(Entry.prototype);
+        obj.__wbg_ptr = ptr;
+        EntryFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        EntryFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_entry_free(ptr, 0);
+    }
+    /**
+     * @param {Uint8Array} enc_pwd
+     * @param {Uint8Array} enc_kyber
+     * @param {Uint8Array} pwd_nonce
+     * @returns {Entry}
+     */
+    static new(enc_pwd, enc_kyber, pwd_nonce) {
+        const ptr0 = passArray8ToWasm0(enc_pwd, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(enc_kyber, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray8ToWasm0(pwd_nonce, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ret = wasm.entry_new(ptr0, len0, ptr1, len1, ptr2, len2);
+        return Entry.__wrap(ret);
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get enc_kyber() {
+        const ret = wasm.__wbg_get_entry_enc_kyber(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get enc_pwd() {
+        const ret = wasm.__wbg_get_entry_enc_pwd(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get pwd_nonce() {
+        const ret = wasm.__wbg_get_entry_pwd_nonce(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set enc_kyber(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_entry_enc_kyber(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set enc_pwd(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_entry_enc_pwd(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set pwd_nonce(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_entry_pwd_nonce(this.__wbg_ptr, ptr0, len0);
+    }
 }
+if (Symbol.dispose) Entry.prototype[Symbol.dispose] = Entry.prototype.free;
 
-/**
- * @param {string} name
- */
-export function greet(name) {
-    const ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    wasm.greet(ptr0, len0);
+export class RegisterEnvelope {
+    static __wrap(ptr) {
+        ptr = ptr >>> 0;
+        const obj = Object.create(RegisterEnvelope.prototype);
+        obj.__wbg_ptr = ptr;
+        RegisterEnvelopeFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        RegisterEnvelopeFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_registerenvelope_free(ptr, 0);
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get enc_sk() {
+        const ret = wasm.__wbg_get_registerenvelope_enc_sk(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get pk() {
+        const ret = wasm.__wbg_get_registerenvelope_pk(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
+    get sk_nonce() {
+        const ret = wasm.__wbg_get_registerenvelope_sk_nonce(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @param {Uint8Array} enc_sk
+     * @param {Uint8Array} pk
+     * @param {Uint8Array} sk_nonce
+     * @returns {RegisterEnvelope}
+     */
+    static new(enc_sk, pk, sk_nonce) {
+        const ptr0 = passArray8ToWasm0(enc_sk, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray8ToWasm0(pk, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray8ToWasm0(sk_nonce, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ret = wasm.registerenvelope_new(ptr0, len0, ptr1, len1, ptr2, len2);
+        return RegisterEnvelope.__wrap(ret);
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set enc_sk(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_registerenvelope_enc_sk(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set pk(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_registerenvelope_pk(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set sk_nonce(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_registerenvelope_sk_nonce(this.__wbg_ptr, ptr0, len0);
+    }
 }
+if (Symbol.dispose) RegisterEnvelope.prototype[Symbol.dispose] = RegisterEnvelope.prototype.free;
 
 /**
  * @param {string} password
+ * @param {Uint8Array} pk
+ * @returns {Entry}
+ */
+export function create_entry(password, pk) {
+    const ptr0 = passStringToWasm0(password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(pk, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.create_entry(ptr0, len0, ptr1, len1);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return Entry.__wrap(ret[0]);
+}
+
+/**
+ * @param {string} master_password
+ * @param {string} user_unique
+ * @returns {RegisterEnvelope}
+ */
+export function generate_register_envelope(master_password, user_unique) {
+    const ptr0 = passStringToWasm0(master_password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(user_unique, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.generate_register_envelope(ptr0, len0, ptr1, len1);
+    if (ret[2]) {
+        throw takeFromExternrefTable0(ret[1]);
+    }
+    return RegisterEnvelope.__wrap(ret[0]);
+}
+
+/**
+ * @param {string} master_password
+ * @param {string} user_unique
+ * @param {Uint8Array} enc_sk
+ * @param {Uint8Array} sk_nonce
+ * @param {Uint8Array} enc_pwd
+ * @param {Uint8Array} enc_kyber
+ * @param {Uint8Array} pwd_nonce
  * @returns {string}
  */
-export function test_all_steps(password) {
-    let deferred3_0;
-    let deferred3_1;
+export function read_entry(master_password, user_unique, enc_sk, sk_nonce, enc_pwd, enc_kyber, pwd_nonce) {
+    let deferred9_0;
+    let deferred9_1;
     try {
-        const ptr0 = passStringToWasm0(password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const ptr0 = passStringToWasm0(master_password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.test_all_steps(ptr0, len0);
-        var ptr2 = ret[0];
-        var len2 = ret[1];
+        const ptr1 = passStringToWasm0(user_unique, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray8ToWasm0(enc_sk, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passArray8ToWasm0(sk_nonce, wasm.__wbindgen_malloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ptr4 = passArray8ToWasm0(enc_pwd, wasm.__wbindgen_malloc);
+        const len4 = WASM_VECTOR_LEN;
+        const ptr5 = passArray8ToWasm0(enc_kyber, wasm.__wbindgen_malloc);
+        const len5 = WASM_VECTOR_LEN;
+        const ptr6 = passArray8ToWasm0(pwd_nonce, wasm.__wbindgen_malloc);
+        const len6 = WASM_VECTOR_LEN;
+        const ret = wasm.read_entry(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6);
+        var ptr8 = ret[0];
+        var len8 = ret[1];
         if (ret[3]) {
-            ptr2 = 0; len2 = 0;
+            ptr8 = 0; len8 = 0;
             throw takeFromExternrefTable0(ret[2]);
         }
-        deferred3_0 = ptr2;
-        deferred3_1 = len2;
-        return getStringFromWasm0(ptr2, len2);
+        deferred9_0 = ptr8;
+        deferred9_1 = len8;
+        return getStringFromWasm0(ptr8, len8);
     } finally {
-        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+        wasm.__wbindgen_free(deferred9_0, deferred9_1, 1);
     }
 }
 
@@ -60,9 +275,6 @@ function __wbg_get_imports() {
         },
         __wbg___wbindgen_throw_be289d5034ed271b: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
-        },
-        __wbg_alert_0a052421082dcae5: function(arg0, arg1) {
-            alert(getStringFromWasm0(arg0, arg1));
         },
         __wbg_call_389efe28435a9388: function() { return handleError(function (arg0, arg1) {
             const ret = arg0.call(arg1);
@@ -163,6 +375,13 @@ function __wbg_get_imports() {
     };
 }
 
+const EntryFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_entry_free(ptr >>> 0, 1));
+const RegisterEnvelopeFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_registerenvelope_free(ptr >>> 0, 1));
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
@@ -198,6 +417,13 @@ function handleError(f, args) {
 
 function isLikeNone(x) {
     return x === undefined || x === null;
+}
+
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
 }
 
 function passStringToWasm0(arg, malloc, realloc) {

@@ -16,43 +16,32 @@ L'affichage d'un mot de passe ne doit durer que quelques secondes
 Gérer le mot de passe d'invitation en paramétrage pour l'admin (valable qu'une heure pour le faire au besoin)
 
 
+# Full process Encryption (Register, Entry creation, Entry retrieve)
 
-https://dev.to/jambochen/using-rust-webassembly-in-vite-react-a-modern-game-of-life-example-hde
+import * as wasm from "$lib/wasm_pkg/kvault_wasm";
+import { onMount } from 'svelte';
 
+onMount(async () => {
+	await wasm.default();
 
-https://docs.rs/argon2/latest/argon2/
-https://docs.rs/aes-gcm/latest/aes_gcm/
-https://docs.rs/pqc_kyber/latest/pqc_kyber/
+	const master_password = "ThisIsAStrongPassword123!";
+	const user_unique = "my_username";
+	const entry_password = "entry_password";
 
+	const register_envelope = wasm.generate_register_envelope(master_password, user_unique);
+	console.log("register_envelope", register_envelope);
 
-Stockage de mdp sur un serveur avec un KEM (Key Encapsulation Mechanism)
+	const entry_result = wasm.create_entry(entry_password, register_envelope.pk);
+	console.log("entry_result", entry_result);
 
-CREATION COMPTE :
-
-Choisit un master password (m_pwd)
-Dérivation m_pwd (enc_m_pwd = m_pwd + salt)
-Créa clés KYBER ((pk, sk) = KYBER.keypair())
-Chiffrement sk (enc_sk = AES-GCM sk + enc_m_pwd)
-
-Envoi au serveur de (user_id, pk, enc_sk)
-
-
-CREATION ENTRY :
-
-Reception (pk)
-Entre le pwd entry (pwd)
-Crée une chaine aléatoire de 256 octets (k_pwd)
-Chiffrement pwd (enc_pwd = AES-GCM pwd + k_pwd)
-Chiffrement k_pwd (enc_k_pwd = KYBER k_pwd + pk)
-
-Envoi au serveur de (entry_metadata, enc_pwd, enc_k_pwd)
-
-
-LECTURE ENTRY :
-
-Reception (entry_metadata, enc_pwd, enc_k_pwd, enc_sk)
-Dérivation m_pwd (enc_m_pwd = m_pwd + salt)
-Déchiffr sk (sk = ~AES enc_sk + enc_m_pwd)
-Déchiffr k_pwd (k_pwd = ~KYBER enc_k_pwd + sk)
-Déchiffr pwd (pwd = ~AES enc_pwd + k_pwd)
-
+	const password = wasm.read_entry(
+		master_password,
+		user_unique,
+		register_envelope.enc_sk,
+		register_envelope.sk_nonce,
+		entry_result.enc_pwd,
+		entry_result.enc_kyber,
+		entry_result.pwd_nonce
+	);
+	console.log("password", password);
+});

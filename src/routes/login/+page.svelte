@@ -19,9 +19,27 @@
 
 	onMount(async () => {
 		await wasm.default();
-		// wasm.greet("alert message");
 
-		console.log("call test_all_steps", wasm.test_all_steps("mot de passe"));
+		const master_password = "smlksdflmk12''(!";
+		const user_unique = "qsmdlkkdee";
+		const entry_password = "jksqdlmles";
+
+		const register_envelope = wasm.generate_register_envelope(master_password, user_unique);
+		console.log("register_envelope", register_envelope);
+
+		const entry_result = wasm.create_entry(entry_password, register_envelope.pk);
+		console.log("entry_result", entry_result);
+
+		const password = wasm.read_entry(
+			master_password,
+			user_unique,
+			register_envelope.enc_sk,
+			register_envelope.sk_nonce,
+			entry_result.enc_pwd,
+			entry_result.enc_kyber,
+			entry_result.pwd_nonce
+		);
+		console.log("password", password);
 	});
 
 	async function onsubmit(event: Event) {
