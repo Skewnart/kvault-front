@@ -40,6 +40,8 @@
 			entry_result.pwd_nonce
 		);
 		console.log("password", password);
+
+		console.log("mot de passe égaux : ", password === entry_password ? "oui" : "non");
 	});
 
 	async function onsubmit(event: Event) {
