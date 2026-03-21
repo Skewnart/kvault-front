@@ -1,7 +1,7 @@
 {
 	"name": "kvault-front",
 	"private": true,
-	"version": "0.2.1-alpha",
+	"version": "0.3.0-alpha",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -10,7 +10,8 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "echo \"Soon !\""
+		"test": "echo \"Soon !\"",
+		"update_wasm": "cp -r ../kvault-wasm/wasm_pkg ./src/lib/"
 	},
 	"devDependencies": {
 		"@fontsource/fira-mono": "^5.0.0",
@@ -21,7 +22,9 @@
 		"svelte": "^5.25.0",
 		"svelte-check": "^4.0.0",
 		"typescript": "^5.0.0",
-		"vite": "^7.0.4"
+		"vite": "^7.0.4",
+		"vite-plugin-top-level-await": "^1.6.0",
+		"vite-plugin-wasm": "^3.5.0"
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.18",

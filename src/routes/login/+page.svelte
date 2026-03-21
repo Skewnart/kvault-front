@@ -5,6 +5,9 @@
     import { login, set_token } from '$lib/api';
     import { goto } from '$app/navigation';
 
+	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
+    import { onMount } from 'svelte';
+
 	const TITLE = "Connexion";
 
 	let username = $state('');
@@ -13,6 +16,33 @@
 	let error = $state("");
 	let callPending = $state(false);
 	let showPassword = $state(false);
+
+	onMount(async () => {
+		await wasm.default();
+
+		const master_password = "smlksdflmk12''(!";
+		const user_unique = "qsmdlkkdee";
+		const entry_password = "jksqdlmles";
+
+		const register_envelope = wasm.generate_register_envelope(master_password, user_unique);
+		console.log("register_envelope", register_envelope);
+
+		const entry_result = wasm.create_entry(entry_password, register_envelope.pk);
+		console.log("entry_result", entry_result);
+
+		const password = wasm.read_entry(
+			master_password,
+			user_unique,
+			register_envelope.enc_sk,
+			register_envelope.sk_nonce,
+			entry_result.enc_pwd,
+			entry_result.enc_kyber,
+			entry_result.pwd_nonce
+		);
+		console.log("password", password);
+
+		console.log("mot de passe égaux : ", password === entry_password ? "oui" : "non");
+	});
 
 	async function onsubmit(event: Event) {
 		error = "";
