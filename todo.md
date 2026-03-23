@@ -47,6 +47,12 @@ TODO PLUS TARD :- Sur le front, il faudra afficher les invitations avec en premi
 				folders : id, user_id, enc_entries { id, name, description, is_favorite }
 				entry : id, user_id, user, password
 
+
+### En pause, À faire :
+	Sur le front, register en cours (redirection une fois register, faire les validateurs (mot de passe identique etc), gérer + d'erreurs pour le guid, duplicate usrename etc)
+	Côté front, garder l'envelope quand le register passe, et le token aussi
+		Pour le login, récupérer l'envelope
+
 # Full process Encryption (Register, Entry creation, Entry retrieve)
 
 import * as wasm from "$lib/wasm_pkg/kvault_wasm";

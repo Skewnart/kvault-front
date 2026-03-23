@@ -21,26 +21,26 @@
 		await wasm.default();
 
 		const master_password = "smlksdflmk12''(!";
-		const entry_password = "jksqdlmles";
+		const password = "jksqdlmles";
 
 		const register_envelope = wasm.generate_register_envelope(master_password);
 		console.log("register_envelope", register_envelope);
 
-		const entry_result = wasm.create_entry(entry_password, register_envelope.pk);
-		console.log("entry_result", entry_result);
+		const encoded_password = wasm.create_encoded(password, register_envelope.pk);
+		console.log("encoded_password", encoded_password);
 
-		const password = wasm.read_entry(
+		const encoded = wasm.read_encoded(
 			master_password,
 			register_envelope.master_salt,
 			register_envelope.enc_sk,
 			register_envelope.sk_nonce,
-			entry_result.enc_pwd,
-			entry_result.enc_kyber,
-			entry_result.pwd_nonce
+			encoded_password.encoded,
+			encoded_password.enc_kyber,
+			encoded_password.enc_nonce
 		);
-		console.log("password", password);
+		console.log("encoded", encoded);
 
-		console.log("mot de passe égaux : ", password === entry_password ? "oui" : "non");
+		console.log("mot de passe égaux : ", encoded === password ? "oui" : "non");
 	});
 
 	async function onsubmit(event: Event) {
