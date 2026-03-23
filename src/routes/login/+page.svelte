@@ -21,10 +21,9 @@
 		await wasm.default();
 
 		const master_password = "smlksdflmk12''(!";
-		const user_unique = "qsmdlkkdee";
 		const entry_password = "jksqdlmles";
 
-		const register_envelope = wasm.generate_register_envelope(master_password, user_unique);
+		const register_envelope = wasm.generate_register_envelope(master_password);
 		console.log("register_envelope", register_envelope);
 
 		const entry_result = wasm.create_entry(entry_password, register_envelope.pk);
@@ -32,7 +31,7 @@
 
 		const password = wasm.read_entry(
 			master_password,
-			user_unique,
+			register_envelope.master_salt,
 			register_envelope.enc_sk,
 			register_envelope.sk_nonce,
 			entry_result.enc_pwd,
