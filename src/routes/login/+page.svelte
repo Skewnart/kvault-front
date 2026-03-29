@@ -2,7 +2,7 @@
 
 	import { fade } from 'svelte/transition';
 	import "../../app.css";
-    import { login, set_token } from '$lib/api';
+    import { get_envelope, login, set_token } from '$lib/api';
     import { goto } from '$app/navigation';
 
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
@@ -68,8 +68,14 @@
 				const response = await login(username, password);
 				if (response.status === 200) {
 					response.text().then(function (token) {
-						set_token(token).then(() => {
+						set_token(token).then(async () => {
 							callPending = false;
+							await get_envelope(token).then(resp => 
+								resp.text().then(envelope => 
+									sessionStorage.setItem('envelope', envelope)
+								)
+							);
+
 							goto('/');
 						});
 					});
