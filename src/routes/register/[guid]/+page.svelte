@@ -6,6 +6,8 @@
     import { goto } from '$app/navigation';
 
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
+    import type { RegisterEnvelopeDTO } from '$lib/models/register_envelope_dto';
+    import type { EncodedDTO } from '$lib/models/encoded_dto';
 
 	const TITLE = "Inscription";
 
@@ -30,12 +32,19 @@
 
 		const register_envelope = wasm.generate_register_envelope(master_password);
 		const enc_folders = wasm.create_encoded("{}", register_envelope.pk);
+
+		const envelope_dto : RegisterEnvelopeDTO = { enc_sk:register_envelope.enc_sk, master_salt:register_envelope.master_salt, pk:register_envelope.pk, sk_nonce: register_envelope.sk_nonce };
+		const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
 		
 		try {
-			const response = await register(data.guid, username, password, register_envelope, enc_folders);
-			if (response.status === 200) {
+			const response = await register(data.guid, username, password, envelope_dto, enc_folders_dto);
+			if (response.status === 201) {
 				response.text().then(function (token) {
 					set_token(token).then(() => {
+						sessionStorage.setItem('envelope', JSON.stringify(envelope_dto));
+						sessionStorage.setItem('enc_folders', JSON.stringify(enc_folders_dto));
+						sessionStorage.setItem('mp', master_password);
+
 						callPending = false;
 						goto('/');
 					});
