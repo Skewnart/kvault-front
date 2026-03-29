@@ -17,32 +17,6 @@
 	let callPending = $state(false);
 	let showPassword = $state(false);
 
-	onMount(async () => {
-		await wasm.default();
-
-		const master_password = "smlksdflmk12''(!";
-		const password = "jksqdlmles";
-
-		const register_envelope = wasm.generate_register_envelope(master_password);
-		console.log("register_envelope", register_envelope);
-
-		const encoded_password = wasm.create_encoded(password, register_envelope.pk);
-		console.log("encoded_password", encoded_password);
-
-		const encoded = wasm.read_encoded(
-			master_password,
-			register_envelope.master_salt,
-			register_envelope.enc_sk,
-			register_envelope.sk_nonce,
-			encoded_password.encoded,
-			encoded_password.enc_kyber,
-			encoded_password.enc_nonce
-		);
-		console.log("encoded", encoded);
-
-		console.log("mot de passe égaux : ", encoded === password ? "oui" : "non");
-	});
-
 	async function onsubmit(event: Event) {
 		error = "";
 		callPending = true;
