@@ -30,27 +30,49 @@
 		
 		await wasm.default();
 
-		const register_envelope = wasm.generate_register_envelope(master_password);
-		const enc_folders = wasm.create_encoded("{}", register_envelope.pk);
+		if (password != password_confirm){
+			error = "Les mots de passe de connexion sont différents";
+			callPending = false;
+			return;
+		}
+
+		if (master_password != master_password_confirm){
+			error = "Les mots de passe de chiffrement sont différents";
+			callPending = false;
+			return;
+		}
+
+		let register_envelope:any;
+		let enc_folders:any;
+		try {
+			register_envelope = wasm.generate_register_envelope(master_password);
+			enc_folders = wasm.create_encoded("[]", register_envelope.pk);
+		} catch(error) {
+			error = "Les fonctions de chiffrement n'ont pas fonctionné";
+			callPending = false;
+			return;
+		}
 
 		const envelope_dto : RegisterEnvelopeDTO = { enc_sk:register_envelope.enc_sk, master_salt:register_envelope.master_salt, pk:register_envelope.pk, sk_nonce: register_envelope.sk_nonce };
 		const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
 		
 		try {
 			const response = await register(data.guid, username, password, envelope_dto, enc_folders_dto);
-			if (response.status === 201) {
+			if (response.status === 404) {
+				error = "Le lien d'invitation n'est pas valide";
+				callPending = false;
+			}
+			else if (response.status === 201) {
 				response.text().then(function (token) {
 					set_token(token).then(() => {
 						sessionStorage.setItem('envelope', JSON.stringify(envelope_dto));
-						sessionStorage.setItem('enc_folders', JSON.stringify(enc_folders_dto));
+						sessionStorage.setItem('folders', JSON.stringify([]));
 						sessionStorage.setItem('mp', master_password);
-
-						callPending = false;
 						goto('/');
 					});
 				});
 			} else {
-				error = "Mot de passe erroné";
+				error = "Une erreur est survenue";
 				callPending = false;
 			}
 		} catch (e) {
@@ -92,6 +114,7 @@
 							autocomplete="username"
 							type="text"
 							placeholder="Utilisateur"
+							required
 							disabled={callPending}
 							bind:value={username}
 							autofocus
@@ -123,6 +146,8 @@
 								placeholder="Mot de passe"
 								bind:value={password}
 								disabled={callPending}
+								required
+							    minlength="8"
 							/>
 						</label>
 					</div>
@@ -149,6 +174,8 @@
 								placeholder="Confirmez-le"
 								bind:value={password_confirm}
 								disabled={callPending}
+								required
+							    minlength="8"
 							/>
 						</label>
 					</div>	
@@ -184,6 +211,8 @@
 								placeholder="Mot de passe"
 								bind:value={master_password}
 								disabled={callPending}
+								required
+							    minlength="8"
 							/>
 						</label>
 					</div>
@@ -210,6 +239,8 @@
 								placeholder="Confirmez-le"
 								bind:value={master_password_confirm}
 								disabled={callPending}
+								required
+							    minlength="8"
 							/>
 						</label>
 					</div>
