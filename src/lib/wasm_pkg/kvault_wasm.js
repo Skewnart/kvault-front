@@ -1,44 +1,44 @@
 /* @ts-self-types="./kvault_wasm.d.ts" */
 
-export class Entry {
+export class Encoded {
     static __wrap(ptr) {
         ptr = ptr >>> 0;
-        const obj = Object.create(Entry.prototype);
+        const obj = Object.create(Encoded.prototype);
         obj.__wbg_ptr = ptr;
-        EntryFinalization.register(obj, obj.__wbg_ptr, obj);
+        EncodedFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
-        EntryFinalization.unregister(this);
+        EncodedFinalization.unregister(this);
         return ptr;
     }
     free() {
         const ptr = this.__destroy_into_raw();
-        wasm.__wbg_entry_free(ptr, 0);
+        wasm.__wbg_encoded_free(ptr, 0);
     }
     /**
-     * @param {Uint8Array} enc_pwd
+     * @param {Uint8Array} encoded
      * @param {Uint8Array} enc_kyber
-     * @param {Uint8Array} pwd_nonce
-     * @returns {Entry}
+     * @param {Uint8Array} enc_nonce
+     * @returns {Encoded}
      */
-    static new(enc_pwd, enc_kyber, pwd_nonce) {
-        const ptr0 = passArray8ToWasm0(enc_pwd, wasm.__wbindgen_malloc);
+    static new(encoded, enc_kyber, enc_nonce) {
+        const ptr0 = passArray8ToWasm0(encoded, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passArray8ToWasm0(enc_kyber, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
-        const ptr2 = passArray8ToWasm0(pwd_nonce, wasm.__wbindgen_malloc);
+        const ptr2 = passArray8ToWasm0(enc_nonce, wasm.__wbindgen_malloc);
         const len2 = WASM_VECTOR_LEN;
-        const ret = wasm.entry_new(ptr0, len0, ptr1, len1, ptr2, len2);
-        return Entry.__wrap(ret);
+        const ret = wasm.encoded_new(ptr0, len0, ptr1, len1, ptr2, len2);
+        return Encoded.__wrap(ret);
     }
     /**
      * @returns {Uint8Array}
      */
     get enc_kyber() {
-        const ret = wasm.__wbg_get_entry_enc_kyber(this.__wbg_ptr);
+        const ret = wasm.__wbg_get_encoded_enc_kyber(this.__wbg_ptr);
         var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
         return v1;
@@ -46,8 +46,8 @@ export class Entry {
     /**
      * @returns {Uint8Array}
      */
-    get enc_pwd() {
-        const ret = wasm.__wbg_get_entry_enc_pwd(this.__wbg_ptr);
+    get enc_nonce() {
+        const ret = wasm.__wbg_get_encoded_enc_nonce(this.__wbg_ptr);
         var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
         return v1;
@@ -55,8 +55,8 @@ export class Entry {
     /**
      * @returns {Uint8Array}
      */
-    get pwd_nonce() {
-        const ret = wasm.__wbg_get_entry_pwd_nonce(this.__wbg_ptr);
+    get encoded() {
+        const ret = wasm.__wbg_get_encoded_encoded(this.__wbg_ptr);
         var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
         return v1;
@@ -67,26 +67,26 @@ export class Entry {
     set enc_kyber(arg0) {
         const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_entry_enc_kyber(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_encoded_enc_kyber(this.__wbg_ptr, ptr0, len0);
     }
     /**
      * @param {Uint8Array} arg0
      */
-    set enc_pwd(arg0) {
+    set enc_nonce(arg0) {
         const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_entry_enc_pwd(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_encoded_enc_nonce(this.__wbg_ptr, ptr0, len0);
     }
     /**
      * @param {Uint8Array} arg0
      */
-    set pwd_nonce(arg0) {
+    set encoded(arg0) {
         const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        wasm.__wbg_set_entry_pwd_nonce(this.__wbg_ptr, ptr0, len0);
+        wasm.__wbg_set_encoded_encoded(this.__wbg_ptr, ptr0, len0);
     }
 }
-if (Symbol.dispose) Entry.prototype[Symbol.dispose] = Entry.prototype.free;
+if (Symbol.dispose) Encoded.prototype[Symbol.dispose] = Encoded.prototype.free;
 
 export class RegisterEnvelope {
     static __wrap(ptr) {
@@ -118,6 +118,15 @@ export class RegisterEnvelope {
     /**
      * @returns {Uint8Array}
      */
+    get master_salt() {
+        const ret = wasm.__wbg_get_registerenvelope_master_salt(this.__wbg_ptr);
+        var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v1;
+    }
+    /**
+     * @returns {Uint8Array}
+     */
     get pk() {
         const ret = wasm.__wbg_get_registerenvelope_pk(this.__wbg_ptr);
         var v1 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
@@ -134,19 +143,22 @@ export class RegisterEnvelope {
         return v1;
     }
     /**
+     * @param {Uint8Array} master_salt
      * @param {Uint8Array} enc_sk
      * @param {Uint8Array} pk
      * @param {Uint8Array} sk_nonce
      * @returns {RegisterEnvelope}
      */
-    static new(enc_sk, pk, sk_nonce) {
-        const ptr0 = passArray8ToWasm0(enc_sk, wasm.__wbindgen_malloc);
+    static new(master_salt, enc_sk, pk, sk_nonce) {
+        const ptr0 = passArray8ToWasm0(master_salt, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        const ptr1 = passArray8ToWasm0(pk, wasm.__wbindgen_malloc);
+        const ptr1 = passArray8ToWasm0(enc_sk, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
-        const ptr2 = passArray8ToWasm0(sk_nonce, wasm.__wbindgen_malloc);
+        const ptr2 = passArray8ToWasm0(pk, wasm.__wbindgen_malloc);
         const len2 = WASM_VECTOR_LEN;
-        const ret = wasm.registerenvelope_new(ptr0, len0, ptr1, len1, ptr2, len2);
+        const ptr3 = passArray8ToWasm0(sk_nonce, wasm.__wbindgen_malloc);
+        const len3 = WASM_VECTOR_LEN;
+        const ret = wasm.registerenvelope_new(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
         return RegisterEnvelope.__wrap(ret);
     }
     /**
@@ -156,6 +168,14 @@ export class RegisterEnvelope {
         const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         wasm.__wbg_set_registerenvelope_enc_sk(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {Uint8Array} arg0
+     */
+    set master_salt(arg0) {
+        const ptr0 = passArray8ToWasm0(arg0, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.__wbg_set_registerenvelope_master_salt(this.__wbg_ptr, ptr0, len0);
     }
     /**
      * @param {Uint8Array} arg0
@@ -177,33 +197,30 @@ export class RegisterEnvelope {
 if (Symbol.dispose) RegisterEnvelope.prototype[Symbol.dispose] = RegisterEnvelope.prototype.free;
 
 /**
- * @param {string} password
+ * @param {string} plain_text
  * @param {Uint8Array} pk
- * @returns {Entry}
+ * @returns {Encoded}
  */
-export function create_entry(password, pk) {
-    const ptr0 = passStringToWasm0(password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+export function create_encoded(plain_text, pk) {
+    const ptr0 = passStringToWasm0(plain_text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passArray8ToWasm0(pk, wasm.__wbindgen_malloc);
     const len1 = WASM_VECTOR_LEN;
-    const ret = wasm.create_entry(ptr0, len0, ptr1, len1);
+    const ret = wasm.create_encoded(ptr0, len0, ptr1, len1);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
-    return Entry.__wrap(ret[0]);
+    return Encoded.__wrap(ret[0]);
 }
 
 /**
  * @param {string} master_password
- * @param {string} user_unique
  * @returns {RegisterEnvelope}
  */
-export function generate_register_envelope(master_password, user_unique) {
+export function generate_register_envelope(master_password) {
     const ptr0 = passStringToWasm0(master_password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ptr1 = passStringToWasm0(user_unique, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN;
-    const ret = wasm.generate_register_envelope(ptr0, len0, ptr1, len1);
+    const ret = wasm.generate_register_envelope(ptr0, len0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -212,33 +229,33 @@ export function generate_register_envelope(master_password, user_unique) {
 
 /**
  * @param {string} master_password
- * @param {string} user_unique
+ * @param {Uint8Array} master_salt
  * @param {Uint8Array} enc_sk
  * @param {Uint8Array} sk_nonce
- * @param {Uint8Array} enc_pwd
+ * @param {Uint8Array} encoded
  * @param {Uint8Array} enc_kyber
- * @param {Uint8Array} pwd_nonce
+ * @param {Uint8Array} nonce
  * @returns {string}
  */
-export function read_entry(master_password, user_unique, enc_sk, sk_nonce, enc_pwd, enc_kyber, pwd_nonce) {
+export function read_encoded(master_password, master_salt, enc_sk, sk_nonce, encoded, enc_kyber, nonce) {
     let deferred9_0;
     let deferred9_1;
     try {
         const ptr0 = passStringToWasm0(master_password, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ptr1 = passStringToWasm0(user_unique, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const ptr1 = passArray8ToWasm0(master_salt, wasm.__wbindgen_malloc);
         const len1 = WASM_VECTOR_LEN;
         const ptr2 = passArray8ToWasm0(enc_sk, wasm.__wbindgen_malloc);
         const len2 = WASM_VECTOR_LEN;
         const ptr3 = passArray8ToWasm0(sk_nonce, wasm.__wbindgen_malloc);
         const len3 = WASM_VECTOR_LEN;
-        const ptr4 = passArray8ToWasm0(enc_pwd, wasm.__wbindgen_malloc);
+        const ptr4 = passArray8ToWasm0(encoded, wasm.__wbindgen_malloc);
         const len4 = WASM_VECTOR_LEN;
         const ptr5 = passArray8ToWasm0(enc_kyber, wasm.__wbindgen_malloc);
         const len5 = WASM_VECTOR_LEN;
-        const ptr6 = passArray8ToWasm0(pwd_nonce, wasm.__wbindgen_malloc);
+        const ptr6 = passArray8ToWasm0(nonce, wasm.__wbindgen_malloc);
         const len6 = WASM_VECTOR_LEN;
-        const ret = wasm.read_entry(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6);
+        const ret = wasm.read_encoded(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5, ptr6, len6);
         var ptr8 = ret[0];
         var len8 = ret[1];
         if (ret[3]) {
@@ -375,9 +392,9 @@ function __wbg_get_imports() {
     };
 }
 
-const EntryFinalization = (typeof FinalizationRegistry === 'undefined')
+const EncodedFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_entry_free(ptr >>> 0, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_encoded_free(ptr >>> 0, 1));
 const RegisterEnvelopeFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_registerenvelope_free(ptr >>> 0, 1));
