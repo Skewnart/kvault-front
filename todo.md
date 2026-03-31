@@ -40,12 +40,20 @@ actif -> is_active AND user_id IS NULL AND now() >= created_at AND now() <= crea
 
 TODO PLUS TARD :- Sur le front, il faudra afficher les invitations avec en premier les invitations utilisables du plus récent au plus dans le futur,
 				puis non utilisables de maintenant à plus dans le passé (utilisé en bleu, !is_active en barré, expiré en rouge)
-				- faire la désactivation d'un invitation
+				- faire la désactivation d'une invitation
 
 				Rassembler tous les enc_*
 				user : enc_folders : { id, name }
 				folders : id, user_id, enc_entries { id, name, description, is_favorite }
 				entry : id, user_id, user, password
+
+
+### En pause, À faire :
+	Sur le front, register en cours, faire les validateurs (mot de passe identique pour les deux, les deux mots de passes différents, les deux non vides), gérer + d'erreurs pour le guid (inexistant), duplicate username etc)
+	Faire une barre de progression pour la génération de l'envelope, la sauvegarde etc
+
+	Côté front, quand le register passe, garder l'envelope, le master_password et le token
+	Pour le login, demander le master_password et récupérer l'envelope
 
 # Full process Encryption (Register, Entry creation, Entry retrieve)
 
