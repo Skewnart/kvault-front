@@ -2,25 +2,36 @@
 
 	import { fade } from 'svelte/transition';
 	import "../../app.css";
-    import { get_envelope, login, set_token } from '$lib/api';
+    import { get_encoded, get_envelope, login, set_token } from '$lib/api';
     import { goto } from '$app/navigation';
 
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
     import { onMount } from 'svelte';
+    import type { EncodedDTO } from '$lib/models/encoded_dto';
+    import type { RegisterEnvelopeDTO } from '$lib/models/register_envelope_dto';
 
 	const TITLE = "Connexion";
 
 	let username = $state('');
 	let password = $state('');
+	let master_password = $state('');
 
 	let error = $state("");
 	let callPending = $state(false);
 	let showPassword = $state(false);
 
+	onMount(async () => {
+		sessionStorage.removeItem('envelope');
+		sessionStorage.removeItem('folders');
+		sessionStorage.removeItem('mp');
+	});
+
 	async function onsubmit(event: Event) {
 		error = "";
 		callPending = true;
 		event.preventDefault();
+		
+		await wasm.default();
 
 		if (!showPassword) {
 			try {
@@ -39,26 +50,52 @@
 
 		} else {
 			try {
-				const response = await login(username, password);
-				if (response.status === 200) {
-					response.text().then(function (token) {
-						set_token(token).then(async () => {
-							callPending = false;
-							await get_envelope(token).then(resp => 
-								resp.text().then(envelope => 
-									sessionStorage.setItem('envelope', envelope)
-								)
-							);
-
-							goto('/');
-						});
-					});
-				} else {
-					error = "Mot de passe erroné";
+				const login_response = await login(username, password);
+				if (login_response.status !== 200) {
+					error = "Mot de passe de connexion erroné";
 					callPending = false;
+					return;
 				}
+
+				const token = await login_response.text();
+
+				let user_envelope: RegisterEnvelopeDTO;
+				let folder_encoded: EncodedDTO;
+				try {
+					user_envelope = await get_envelope(token);
+					folder_encoded = await get_encoded(token, "folder");
+				} catch (err) {
+					error = "Erreur lors de la réception des données de l'utilisateur";
+					callPending = false;
+					return;
+				}
+				
+				let folders;
+				try {
+					folders = JSON.parse(wasm.read_encoded(
+						master_password,
+						user_envelope.master_salt,
+						user_envelope.enc_sk,
+						user_envelope.sk_nonce,
+						folder_encoded.encoded,
+						folder_encoded.enc_kyber,
+						folder_encoded.enc_nonce
+					));
+				} catch (decryptError) {
+					error = "Mot de passe de chiffrement erroné";
+					callPending = false;
+					return;
+				}
+
+				sessionStorage.setItem('folders', JSON.stringify(folders));
+				sessionStorage.setItem('envelope', JSON.stringify(user_envelope));
+				sessionStorage.setItem('mp', master_password);
+
+				await set_token(token);
+
+				goto('/');
 			} catch (e) {
-				error = "Erreur réseau";
+				error = "Une erreur est survenue";
 				callPending = false;
 			}
 		}
@@ -98,6 +135,7 @@
 							autocomplete="username"
 							type="text"
 							placeholder="Utilisateur"
+							required
 							disabled={showPassword || callPending}
 							bind:value={username}
 							autofocus
@@ -125,9 +163,37 @@
 							<input
 								id="password"
 								type="password"
-								placeholder="Mot de passe"
+								placeholder="Mot de passe de connexion"
+								required
 								bind:value={password}
 								use:giveFocus
+								disabled={callPending}
+							/>
+						</label>
+					</div>
+					
+					<div class="mb-4" transition:fade>
+						<label class="input w-full">
+							<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+								<g
+								stroke-linejoin="round"
+								stroke-linecap="round"
+								stroke-width="2.5"
+								fill="none"
+								stroke="currentColor"
+								>
+								<path
+									d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"
+								></path>
+								<circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+								</g>
+							</svg>
+							<input
+								id="password"
+								type="password"
+								placeholder="Mot de passe de chiffrement"
+								required
+								bind:value={master_password}
 								disabled={callPending}
 							/>
 						</label>
