@@ -66,6 +66,20 @@ export async function get_encoded(token: String, endpoint: String) : Promise<Enc
 	);
 }
 
+export async function post_encoded(token: String, endpoint: String, body: string) : Promise<string> {
+	
+	return fetch(`${PUBLIC_API_URL}/${endpoint}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`
+		},
+		body: body
+	}).then(response => {
+		return response.text()
+	});
+}
+
 // LOCAL
 
 export async function set_token(token: string) : Promise<Response> {
