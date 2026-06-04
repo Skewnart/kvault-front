@@ -3,11 +3,19 @@
     import { onMount } from 'svelte';
 	import '../../app.css';
     import { goto } from '$app/navigation';
+    import { post_encoded } from '$lib/api';
+    import type { EncodedDTO } from '$lib/models/encoded_dto';
+	
+	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
+    import { RegisterEnvelopeDTOFrom, type RegisterEnvelopeDTO } from '$lib/models/register_envelope_dto';
+    import AddFolderDialog from '$lib/AddFolderDialog.svelte';
 	
 	const TITLE = "Kvault";
 
 	const props = $props();
 	let error = $state("");
+	let callPending = $state(false);
+	let folder_name = $state("");
 	let folders = $state<FolderDTO[] | undefined>(undefined);
 
 	if (!props.data) {
@@ -29,34 +37,98 @@
 		e.preventDefault();
 		//TODO EDIT
 	}
+
+	function openAddFolderModal() {
+		folder_name = "";
+		const modal = document.getElementById('add_folder_modal') as HTMLDialogElement | null;
+		if (modal) {
+			modal.showModal();
+		}
+	}
+
+	function addFolder(e: Event) {
+		console.log("avant appel");
+		console.log("e", e);
+
+		const folder_name_str = folder_name;
 	
-	//TODO remplacer tout le onmount par un truc plus générique
-	onMount(() => {
+		callPending = true;
+
+		const envelope_str = sessionStorage.getItem("envelope");
+		if (envelope_str == null) {
+			error = "Les données de chiffrement devraient être présents après connexion.";
+		}
+		const envelope : RegisterEnvelopeDTO = RegisterEnvelopeDTOFrom(envelope_str!);
+
+		let enc_entries:wasm.Encoded;
+		try {
+			enc_entries = wasm.create_encoded("[]", envelope.pk);
+			console.log("enc_entries", enc_entries);
+		} catch(error) {
+			console.error(error);
+			error = "Les fonctions de chiffrement n'ont pas fonctionné";
+			console.log("aya");
+			callPending = false;
+			return;
+		}
+
+		const enc_entries_dto : EncodedDTO = { enc_kyber: enc_entries.enc_kyber, enc_nonce: enc_entries.enc_nonce, encoded: enc_entries.encoded };
+		const enc_data_str = JSON.stringify({ enc_data: enc_entries_dto });
+		console.log("enc_data_str", enc_data_str);
+		post_encoded(token, "folder/new", enc_data_str)
+			.then(id => {
+				console.log("str", id);
+				const folder : FolderDTO = {
+					id, name: folder_name_str
+				};
+				console.log("folder", folder);
+				folders?.push(folder);
+
+				const folders_str = JSON.stringify(folders);
+				sessionStorage.setItem("folders", folders_str);
+
+				const enc_folders = wasm.create_encoded(folders_str, envelope.pk);
+				const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
+				const enc_folders_str = JSON.stringify({ enc_data: enc_folders_dto });
+				post_encoded(token, "folder", enc_folders_str);
+				
+				const modal = document.getElementById('add_folder_modal') as HTMLDialogElement | null;
+				if (modal) {
+					modal.close();
+				}
+				
+				goto(`/folder/${id}`);
+			});
+
+		console.log("après appel");
+		
+		//TODO 
+		// . + Faire l'ajout du folder en base (+ récupérer l'id)
+		// . + Faire la modif de l'array en sessionStorage
+		// . + L'envoyer
+		// Si succès :
+		// . + Faire la fermeture modale
+		// . + Faire le rafraichissement de la liste des folders
+		// Sinon : 
+		// + Gérer les erreurs, avec un endroit pour les afficher
+		// + Gérer le bouton disabled ou barre de chargement
+		// + Faire la page pour la modification avec id
+
+		folder_name = "";
+
+		callPending = false;
+	}
+	
+	onMount(async () => {
+		
+		await wasm.default();
+
 		const folders_session = sessionStorage.getItem("folders");
 		if (folders_session == null) {
 			error = "Les dossiers devraient être présents après connexion.";
 		}
 		folders = JSON.parse(folders_session!);
-		
-		// fetch(`${PUBLIC_API_URL}/folder`, {
-		// 	method: 'GET',
-		// 	headers: {
-		// 		'Content-Type': 'application/json',
-		// 		'Authorization': `Bearer ${token}`
-		// 	}
-		// }).then(response => {
-		// 	if (!response.ok) {
-		// 		error = `${response.status}. Erreur pendant le chargement des données.`;
-		// 	}
-			
-		// 	response.json()
-		// 	.then(json => {
-		// 		folders = json;
-		// 	})
-		// 	.catch(err => {
-		// 		error = `${err}`;
-		// 	});
-		// });
+		$inspect("folders", folders);
 	});
 
 </script>
@@ -123,6 +195,8 @@
 				</a>
 				{/each}
 			</ul>
+			<button class="btn btn-primary btn-block my-4" onclick={openAddFolderModal}> Ajouter un dossier</button>
+			<AddFolderDialog bind:folder_name callPending={callPending} onSubmit={addFolder} />
 		{:else}
 			<div class="flex justify-center">
 				<span class="loading loading-spinner text-primary"></span>
