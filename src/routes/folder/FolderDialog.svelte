@@ -5,13 +5,15 @@
 	import { post_encoded } from "../../lib/api";
 	import type { FolderDTO } from "../../lib/models/folder_dto";
 
-	let folder_name = $state("");
-		let error = $state("");
-	let callPending = $state(false);
+	let { token, folders = $bindable(), folder } = $props();
 
-	let { folders = $bindable(), token } = $props();
+	let folder_id = folder?.id;
+	let folder_name = $state(folder?.name ?? "");
+	let error = $state("");
+	let callPending = $state(false);
 	
-	function addFolder(e: Event) {
+	function submitFolder(e: Event) {
+		e.preventDefault();
 
 		callPending = true;
 		error = "";
@@ -24,6 +26,15 @@
 		}
 		const envelope : RegisterEnvelopeDTO = RegisterEnvelopeDTOFrom(envelope_str!);
 
+		if (!!folder_id) {
+			updateFolder(envelope);
+		}
+		else {
+			addFolder(envelope);
+		}
+	}
+
+	function addFolder(envelope : RegisterEnvelopeDTO) {
 		let enc_entries:wasm.Encoded;
 		try {
 			enc_entries = wasm.create_encoded("[]", envelope.pk);
@@ -41,42 +52,63 @@
 				const folder : FolderDTO = {
 					id, name: folder_name
 				};
-				folders?.push(folder);
-
-				const folders_str = JSON.stringify(folders);
-				sessionStorage.setItem("folders", folders_str);
-
-				const enc_folders = wasm.create_encoded(folders_str, envelope.pk);
-				const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
-				const enc_folders_str = JSON.stringify({ enc_data: enc_folders_dto });
-				post_encoded(token, "folder", enc_folders_str);
 				
-				const modal = document.getElementById('add_folder_modal') as HTMLDialogElement | null;
-				if (modal) {
-					modal.close();
-					folder_name = "";
-					callPending = false;
-				}
+				persistFolderAndClose(envelope, folder);
+			}).catch(err => {
+				console.error(err);
+				error = "Erreur lors de la création du dossier";
+				callPending = false;
 			});
+	}
+
+	function updateFolder(envelope : RegisterEnvelopeDTO) {
+		const folder : FolderDTO = {
+			id: folder_id,
+			name: folder_name
+		}
+
+		persistFolderAndClose(envelope, folder);
+	}
+
+	function persistFolderAndClose(envelope : RegisterEnvelopeDTO, folder?: FolderDTO) {
+		if (!!folder) {
+			const idx = folders.findIndex((f: FolderDTO) => f.id === folder?.id);
+			if (idx >= 0) {
+				folders[idx] = folder;
+			} else {
+				folders.push(folder);
+			}
+		}
 		
-		//TODO 
-		// . + Faire l'ajout du folder en base (+ récupérer l'id)
-		// . + Faire la modif de l'array en sessionStorage
-		// . + L'envoyer
-		// Si succès :
-		// . + Faire la fermeture modale
-		// . + Faire le rafraichissement de la liste des folders
-		// Sinon : 
-		// . + Gérer les erreurs, avec un endroit pour les afficher
-		// . + Gérer le bouton disabled ou barre de chargement
-		// + Faire la page pour la modification avec id
+		const folders_str = JSON.stringify(folders);
+		sessionStorage.setItem("folders", folders_str);
+
+		const enc_folders = wasm.create_encoded(folders_str, envelope.pk);
+		const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
+		const enc_folders_str = JSON.stringify({ enc_data: enc_folders_dto });
+
+		post_encoded(token, "folder", enc_folders_str).then(() => {
+			const modal = document.getElementById('add_folder_modal') as HTMLDialogElement | null;
+			if (modal) {
+				modal.close();
+				callPending = false;
+			}
+		}).catch(err => {
+			console.error(err);
+			error = "Erreur lors de l'envoi des dossiers";
+			callPending = false;
+		});
 	}
 </script>
 
 <dialog id="add_folder_modal" class="modal">
 	<div class="modal-box">
-		<h3 class="text-lg font-bold">Ajouter un dossier</h3>
-		<form onsubmit={addFolder} class="mt-4">
+		{#if !!folder_id}
+			<h3 class="text-lg font-bold">Modifier le dossier</h3>
+		{:else}
+			<h3 class="text-lg font-bold">Ajouter un dossier</h3>
+		{/if}
+		<form onsubmit={submitFolder} class="mt-4">
 			<div class="mb-4">
 				<label class="input w-full">
 					<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -116,7 +148,11 @@
 				{#if callPending}
 					<span class="loading loading-dots loading-xl"></span>
 				{:else}
-					Ajouter
+					{#if !!folder_id}
+						Modifier
+					{:else}
+						Ajouter
+					{/if}
 				{/if}
 			</button>
 		</form>
