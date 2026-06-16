@@ -96,7 +96,7 @@
 			</div>
 		{/if}
 
-		{#if folders}
+		{#if !!folders}
 			<ul class="list bg-base-100 rounded-box shadow-md ">
 				<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Todo : Module de recherche</li>
 			</ul>
