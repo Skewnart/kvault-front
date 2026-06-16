@@ -80,6 +80,47 @@ export async function post_encoded(token: String, endpoint: String, body: string
 	});
 }
 
+export async function put_encoded(token: String, endpoint: String, id: number, body: string) : Promise<string> {
+	
+	return fetch(`${PUBLIC_API_URL}/${endpoint}/${id}`, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`
+		},
+		body: body
+	}).then(response => {
+		return response.text()
+	});
+}
+
+export async function delete_by_id(token: String, endpoint: String, id: number) : Promise<string> {
+	return fetch(`${PUBLIC_API_URL}/${endpoint}/${id}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`
+		}
+	}).then(response => {
+		return response.text()
+	});
+}
+
+
+export async function delete_entries(token: String, ids : number[]) : Promise<string> {
+	return fetch(`${PUBLIC_API_URL}/entry/`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': `Bearer ${token}`
+		},
+		body: "["+ids.toString()+"]"
+	}).then(response => {
+		return response.text()
+	});
+}
+
+
 // LOCAL
 
 export async function set_token(token: string) : Promise<Response> {
