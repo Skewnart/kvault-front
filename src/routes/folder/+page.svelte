@@ -9,6 +9,9 @@
 	
 	const TITLE = "Kvault";
 
+	//TODO : supprimer les folders du session storage et faire autrement (récupérer de la base dans la page folder)
+	//TODO : enlever l'édition de la page + de la modale puisque la modification se fera dans la page folder
+
 	const props = $props();
 	let error = $state("");
 	let folders = $state<FolderDTO[] | undefined>(undefined);
