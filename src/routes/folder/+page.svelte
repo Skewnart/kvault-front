@@ -11,6 +11,7 @@
 
 	//TODO : supprimer les folders du session storage et faire autrement (récupérer de la base dans la page folder)
 	//TODO : enlever l'édition de la page + de la modale puisque la modification se fera dans la page folder
+	//TODO : Mettre en place des layout pour l'accueil, la page folder et entry
 
 	const props = $props();
 	let error = $state("");
