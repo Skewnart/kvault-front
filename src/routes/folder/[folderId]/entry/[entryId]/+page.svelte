@@ -119,7 +119,7 @@
 		<h1>{entry?.name}</h1>
 
 		{#if !!entry_details}
-			<p>entry_details avec input</p>
+			<textarea class="textarea" placeholder="Ecrivez ici ce que vous voulez sauvegarder" bind:value={entry_details}></textarea>
 			<button class="btn btn-primary btn-block my-4" onclick={ENREGISTRER}>Enregistrer</button>
 		{:else}
 			<div class="flex justify-center">
