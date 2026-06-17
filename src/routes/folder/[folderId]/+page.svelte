@@ -33,7 +33,7 @@
 
 	function openEntry(e: Event, id: String) {
 		e.preventDefault();
-		goto(`/entry/${id}`);
+		goto(`/folder/${data.folderId}/entry/${id}`);
 	}
 
 	async function addEntry() {
@@ -82,8 +82,6 @@
 			error = "Mot de passe de chiffrement erroné";
 			return;
 		}
-
-		console.log("entries", entries);
 	});
 
 </script>

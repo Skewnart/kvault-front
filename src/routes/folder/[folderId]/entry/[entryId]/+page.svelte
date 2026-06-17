@@ -1,0 +1,130 @@
+<script lang="ts">
+    import type { FolderDTO } from '$lib/models/folder_dto';
+	import { onMount, tick } from 'svelte';
+	import '../../../app.css';
+    import { goto } from '$app/navigation';
+	
+	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
+    import EntryDialog from './EntryDialog.svelte';
+    import type { EntryDTO } from '$lib/models/entry_dto';
+    import { get_encoded } from '$lib/api';
+    import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
+	
+	const TITLE = "Kvault";
+
+	const props = $props();
+	let error = $state("");
+	let entry = $state<EntryDTO | undefined>(undefined);
+	let entry_details = $state<string | undefined>("");
+
+	if (!props.data) {
+		error = "Erreur pendant le chargement des données sur le serveur";
+	}
+	const data = props.data;
+
+	if (data.token == undefined) {
+		error = "Le token n'est pas présent depuis le chargement de la page.";
+	}
+	if (data.folderId == undefined || data.entryId == undefined) {
+		error = "Un Path param est manquant";
+	}
+	const token = data.token;
+	
+	onMount(async () => {
+		
+		await wasm.default();
+
+		const master_password = sessionStorage.getItem("mp");
+		if (master_password == null) {
+			error = "Le mot de passe maître ne peut pas être utilisé.";
+		}
+
+		const user_envelope_session = sessionStorage.getItem("envelope");
+		if (user_envelope_session == null) {
+			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
+		}
+		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+
+		const entries_encoded = await get_encoded(token, `folder/${data.folderId}`);
+		try {
+			const entries = JSON.parse(wasm.read_encoded(
+				master_password!,
+				user_envelope.master_salt,
+				user_envelope.enc_sk,
+				user_envelope.sk_nonce,
+				entries_encoded.encoded,
+				entries_encoded.enc_kyber,
+				entries_encoded.enc_nonce
+			)) as EntryDTO[];
+
+			entry = entries.find((e) => e.id === data.entryId);
+		} catch (decryptError) {
+			error = "Mot de passe de chiffrement erroné";
+			return;
+		}
+
+		const entry_encoded = await get_encoded(token, `entry/${data.entryId}`);
+		try {
+			entry_details = JSON.parse(wasm.read_encoded(
+				master_password!,
+				user_envelope.master_salt,
+				user_envelope.enc_sk,
+				user_envelope.sk_nonce,
+				entry_encoded.encoded,
+				entry_encoded.enc_kyber,
+				entry_encoded.enc_nonce
+			));
+			
+			console.log("entry_details", entry_details);
+		} catch (decryptError) {
+			error = "Mot de passe de chiffrement erroné";
+			return;
+		}
+	});
+
+</script>
+
+<svelte:head>
+	<title>{TITLE}</title>
+	<meta name="description" content="Svelte demo app" />
+</svelte:head>
+
+<div class="navbar bg-base-100 shadow-sm">
+  <div class="flex-1">
+    <a class="btn btn-ghost text-xl" href="/">Kvault</a>
+  </div>
+  <div class="flex-none">
+    <div class="dropdown dropdown-end">
+		<a class="btn btn-ghost btn-circle" aria-label="theme" href="/logout">
+		<svg viewBox="-5.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+			<path d="M14.344 7.375c3.688 1.563 6.281 5.219 6.281 9.5 0 5.656-4.625 10.313-10.313 10.313-5.656 0-10.313-4.656-10.313-10.313 0-4.281 2.594-7.938 6.313-9.5v3.469c-1.938 1.313-3.25 3.5-3.25 6.031 0 4 3.25 7.25 7.25 7.25s7.25-3.25 7.25-7.25c0-2.531-1.281-4.719-3.219-6.031v-3.469zM12.031 16.813v-12.031h-3.438v12.031h3.438z"></path>
+		</svg>
+		</a>
+	</div>
+  </div>
+</div>
+
+<div class="flex justify-center">
+	<div class="md:w-3/4 w-full mt-4 mx-4">
+		
+		{#if error}
+			<div role="alert" class="alert alert-error">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+				</svg>
+				<span>{error}</span>
+			</div>
+		{/if}
+
+		<h1>{entry?.name}</h1>
+
+		{#if !!entry_details}
+			<p>entry_details avec input</p>
+			<button class="btn btn-primary btn-block my-4" onclick={ENREGISTRER}>Enregistrer</button>
+		{:else}
+			<div class="flex justify-center">
+				<span class="loading loading-spinner text-primary"></span>
+			</div>
+		{/if}
+	</div>
+</div>
