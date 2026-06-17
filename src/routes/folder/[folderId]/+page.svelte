@@ -26,7 +26,7 @@
 	if (data.token == undefined) {
 		error = "Le token n'est pas présent depuis le chargement de la page.";
 	}
-	if (data.folder_id == undefined) {
+	if (data.folderId == undefined) {
 		error = "Aucun dossier n'a été demandé";
 	}
 	const token = data.token;
@@ -54,7 +54,7 @@
 			error = "Les dossiers devraient être présents après connexion.";
 		}
 		const folders = JSON.parse(folders_session!) as FolderDTO[];
-		folder = folders.find((folder) => folder.id === data.folder_id);
+		folder = folders.find((folder) => folder.id === data.folderId);
 
 		const master_password = sessionStorage.getItem("mp");
 		if (master_password == null) {
@@ -152,7 +152,7 @@
 			</ul>
 			<button class="btn btn-primary btn-block my-4" onclick={addEntry}>Ajouter un accès</button>
 			{#key modalKey}
-				<EntryDialog {token} folder_id={folder?.id} bind:entries/>
+				<EntryDialog {token} folderId={folder?.id} bind:entries/>
 			{/key}
 		{:else}
 			<div class="flex justify-center">

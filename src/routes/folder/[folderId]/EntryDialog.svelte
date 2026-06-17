@@ -5,7 +5,7 @@
 	import { post_encoded, put_encoded } from "../../../lib/api";
     import type { EntryDTO } from "$lib/models/entry_dto";
 
-	let { token, folder_id, entries = $bindable() } = $props();
+	let { token, folderId, entries = $bindable() } = $props();
 
 	let entryName = $state("");
 	let entryDescription = $state("");
@@ -53,7 +53,7 @@
 				const enc_entries_dto : EncodedDTO = { enc_kyber: enc_entries.enc_kyber, enc_nonce: enc_entries.enc_nonce, encoded: enc_entries.encoded };
 				const enc_entries_str = JSON.stringify({ enc_data: enc_entries_dto });
 
-				put_encoded(token, "folder", folder_id, enc_entries_str).then(() => {
+				put_encoded(token, "folder", folderId, enc_entries_str).then(() => {
 					const modal = document.getElementById('add_entry_modal') as HTMLDialogElement | null;
 					if (modal) {
 						modal.close();

@@ -8,5 +8,5 @@ export async function load({ params, cookies }) {
 
 	if (!params.id) error(404);
 	
-	return { token, folder_id: params.id };
+	return { token, folderId: params.folderId };
 }
