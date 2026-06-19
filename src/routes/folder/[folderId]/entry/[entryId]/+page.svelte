@@ -1,21 +1,23 @@
 <script lang="ts">
-    import type { FolderDTO } from '$lib/models/folder_dto';
-	import { onMount, tick } from 'svelte';
-	import '../../../app.css';
-    import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import '../../../../../app.css';
 	
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
-    import EntryDialog from './EntryDialog.svelte';
     import type { EntryDTO } from '$lib/models/entry_dto';
-    import { get_encoded } from '$lib/api';
+    import { get_encoded, put_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
+    import type { EncodedDTO } from '$lib/models/encoded_dto';
 	
 	const TITLE = "Kvault";
+
+	// TODO Faire popups "Données enregistrées" au clic enregistrements dans toutes les pages
+	// TODO Entrée dans la page Entry, ne pas afficher le mot de passe mais devoir appuyer sur un bouton, pareil pour l'édition
 
 	const props = $props();
 	let error = $state("");
 	let entry = $state<EntryDTO | undefined>(undefined);
-	let entry_details = $state<string | undefined>("");
+	let entry_details = $state<string | undefined>(undefined);
+	let callPending = $state<boolean | undefined>(false);
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -65,7 +67,7 @@
 
 		const entry_encoded = await get_encoded(token, `entry/${data.entryId}`);
 		try {
-			entry_details = JSON.parse(wasm.read_encoded(
+			entry_details = wasm.read_encoded(
 				master_password!,
 				user_envelope.master_salt,
 				user_envelope.enc_sk,
@@ -73,14 +75,34 @@
 				entry_encoded.encoded,
 				entry_encoded.enc_kyber,
 				entry_encoded.enc_nonce
-			));
-			
-			console.log("entry_details", entry_details);
+			);
 		} catch (decryptError) {
 			error = "Mot de passe de chiffrement erroné";
 			return;
 		}
 	});
+
+	function saveEntry() {
+		callPending = true;
+
+		const user_envelope_session = sessionStorage.getItem("envelope");
+		if (user_envelope_session == null) {
+			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
+		}
+		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+		
+		const enc_details = wasm.create_encoded(entry_details ?? "", user_envelope.pk);
+		const enc_details_dto : EncodedDTO = { enc_kyber: enc_details.enc_kyber, enc_nonce: enc_details.enc_nonce, encoded: enc_details.encoded };
+		const enc_details_str = JSON.stringify({ enc_data: enc_details_dto });
+		
+		put_encoded(token, "entry", data.entryId, enc_details_str).then(() => {
+			callPending = false;
+		}).catch(err => {
+			console.error(err);
+			error = "Erreur lors de l'envoi des informations";
+			callPending = false;
+		});
+	}
 
 </script>
 
@@ -116,11 +138,18 @@
 			</div>
 		{/if}
 
-		<h1>{entry?.name}</h1>
+		{#if entry != undefined}
+			<h1>{entry?.name}</h1>
+			<h2>{entry?.description}</h2>
+		{:else}
+			<div class="flex justify-center">
+				<span class="loading loading-spinner text-primary"></span>
+			</div>
+		{/if}
 
-		{#if !!entry_details}
+		{#if entry_details != undefined}
 			<textarea class="textarea" placeholder="Ecrivez ici ce que vous voulez sauvegarder" bind:value={entry_details}></textarea>
-			<button class="btn btn-primary btn-block my-4" onclick={ENREGISTRER}>Enregistrer</button>
+			<button class="btn btn-primary btn-block my-4" onclick={saveEntry} disabled={callPending || entry_details == ""}>Enregistrer</button>
 		{:else}
 			<div class="flex justify-center">
 				<span class="loading loading-spinner text-primary"></span>
