@@ -126,7 +126,7 @@
 			</ul>
 			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
 				{#each entries as entry}
-				<a href="/entry/{entry.id}" >
+				<a href="/folder/{data.folderId}/entry/{entry.id}" >
 					<li class="list-row" >
 						<div>
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-10" fill="none" viewBox="0 0 24 24">

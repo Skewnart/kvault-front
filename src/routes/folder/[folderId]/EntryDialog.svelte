@@ -26,9 +26,9 @@
 		}
 		const envelope : RegisterEnvelopeDTO = RegisterEnvelopeDTOFrom(envelope_str!);
 
-		let enc_entries:wasm.Encoded;
+		let enc_entry_details:wasm.Encoded;
 		try {
-			enc_entries = wasm.create_encoded("[]", envelope.pk);
+			enc_entry_details = wasm.create_encoded(" ", envelope.pk);
 		} catch(error) {
 			console.error(error);
 			error = "Les fonctions de chiffrement n'ont pas fonctionné";
@@ -36,9 +36,9 @@
 			return;
 		}
 
-		const enc_entries_dto : EncodedDTO = { enc_kyber: enc_entries.enc_kyber, enc_nonce: enc_entries.enc_nonce, encoded: enc_entries.encoded };
-		const enc_data_str = JSON.stringify({ enc_data: enc_entries_dto });
-		post_encoded(token, "entry", enc_data_str)
+		const enc_entry_details_dto : EncodedDTO = { enc_kyber: enc_entry_details.enc_kyber, enc_nonce: enc_entry_details.enc_nonce, encoded: enc_entry_details.encoded };
+		const enc_entry_details_str = JSON.stringify({ enc_data: enc_entry_details_dto });
+		post_encoded(token, "entry", enc_entry_details_str)
 			.then(id => {
 				const entry : EntryDTO = {
 					id, name: entryName, description: entryDescription

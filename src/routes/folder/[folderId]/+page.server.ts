@@ -6,7 +6,7 @@ export async function load({ params, cookies }) {
 		throw redirect(303, '/login');
 	}
 
-	if (!params.id) error(404);
+	if (!params.folderId) error(404);
 	
 	return { token, folderId: params.folderId };
 }
