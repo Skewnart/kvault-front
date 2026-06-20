@@ -1,25 +1,21 @@
 <script lang="ts">
     import type { FolderDTO } from '$lib/models/folder_dto';
 	import { onMount, tick } from 'svelte';
-	import '../../app.css';
+	import '../../../app.css';
     import { goto } from '$app/navigation';
 	
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
-    import FolderDialog from './FolderDialog.svelte';
+    import EntryDialog from './EntryDialog.svelte';
+    import type { EntryDTO } from '$lib/models/entry_dto';
+    import { get_encoded } from '$lib/api';
+    import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
 	
 	const TITLE = "Kvault";
 
-	// TODO : supprimer les folders du session storage et faire autrement (récupérer de la base dans la page folder)
-	// TODO : enlever l'édition de la page + de la modale puisque la modification se fera dans la page folder
-	// TODO : Mettre en place des layout pour l'accueil, la page folder et entry
-	// TODO : Changer les features de modif (pas de modale poru ça) et suppression.
-	// TODO : Changer le thème (couleurs) pour se conformer un peu plus au logo
-	// TODO : Refaire le design sur toutes les pages APRES être passé sur toutes les pages pour les FEATURES qui ne changeront pas avec le design
-
 	const props = $props();
 	let error = $state("");
-	let folders = $state<FolderDTO[] | undefined>(undefined);
-	let current_folder = $state<FolderDTO | undefined>(undefined);
+	let folder = $state<FolderDTO | undefined>(undefined);
+	let entries = $state<EntryDTO[] | undefined>(undefined);
 	let modalKey = $state<number>(0);
 
 	if (!props.data) {
@@ -30,28 +26,20 @@
 	if (data.token == undefined) {
 		error = "Le token n'est pas présent depuis le chargement de la page.";
 	}
+	if (data.folderId == undefined) {
+		error = "Aucun dossier n'a été demandé";
+	}
 	const token = data.token;
 
-	function openFolder(e: Event, id: String) {
+	function openEntry(e: Event, id: String) {
 		e.preventDefault();
-		goto(`/folder/${id}`);
+		goto(`/folder/${data.folderId}/entry/${id}`);
 	}
 
-	function editFolder(e: Event, folder: FolderDTO) {
-		e.preventDefault();
-		current_folder = { ...folder };
-		displayFolderModale();
-	}
-
-	function addFolder() {
-		current_folder = undefined;
-		displayFolderModale();
-	}
-
-	async function displayFolderModale() {
+	async function addEntry() {
 		modalKey = modalKey + 1;
 		await tick();
-		const modal = document.getElementById('add_folder_modal') as HTMLDialogElement | null;
+		const modal = document.getElementById('add_entry_modal') as HTMLDialogElement | null;
 		if (modal) {
 			modal.showModal();
 		}
@@ -65,8 +53,35 @@
 		if (folders_session == null) {
 			error = "Les dossiers devraient être présents après connexion.";
 		}
-		folders = JSON.parse(folders_session!);
-		$inspect("folders", folders);
+		const folders = JSON.parse(folders_session!) as FolderDTO[];
+		folder = folders.find((folder) => folder.id === data.folderId);
+
+		const master_password = sessionStorage.getItem("mp");
+		if (master_password == null) {
+			error = "Le mot de passe maître ne peut pas être utilisé.";
+		}
+
+		const user_envelope_session = sessionStorage.getItem("envelope");
+		if (user_envelope_session == null) {
+			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
+		}
+		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+
+		const entries_encoded = await get_encoded(token, `folder/${folder?.id}`);
+		try {
+			entries = JSON.parse(wasm.read_encoded(
+				master_password!,
+				user_envelope.master_salt,
+				user_envelope.enc_sk,
+				user_envelope.sk_nonce,
+				entries_encoded.encoded,
+				entries_encoded.enc_kyber,
+				entries_encoded.enc_nonce
+			)) as EntryDTO[];
+		} catch (decryptError) {
+			error = "Mot de passe de chiffrement erroné";
+			return;
+		}
 	});
 
 </script>
@@ -103,13 +118,15 @@
 			</div>
 		{/if}
 
-		{#if !!folders}
+		<h1>{folder?.name}</h1>
+
+		{#if !!entries}
 			<ul class="list bg-base-100 rounded-box shadow-md ">
-				<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Todo : Module de recherche</li>
+				<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Todo : <a href="https://svelte.dev/tutorial/svelte/passing-snippets">Module de recherche</a></li>
 			</ul>
 			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
-				{#each folders as folder}
-				<a href="/folder/{folder.id}" >
+				{#each entries as entry}
+				<a href="/folder/{data.folderId}/entry/{entry.id}" >
 					<li class="list-row" >
 						<div>
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-10" fill="none" viewBox="0 0 24 24">
@@ -117,14 +134,12 @@
 							</svg>
 						</div>
 						<div class="content-center">
-							<div>{folder.name}</div>
+							<div>{entry.name}</div>
 						</div>
-						<button class="btn btn-square btn-ghost" aria-label="folder-edit-{folder.id}" onclick={(e) => editFolder(e, folder)}>
-							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="black" width="16px" height="16px" viewBox="0 0 24 24">
-								<path fill-rule="evenodd" clip-rule="evenodd" d="M20.8477 1.87868C19.6761 0.707109 17.7766 0.707105 16.605 1.87868L2.44744 16.0363C2.02864 16.4551 1.74317 16.9885 1.62702 17.5692L1.03995 20.5046C0.760062 21.904 1.9939 23.1379 3.39334 22.858L6.32868 22.2709C6.90945 22.1548 7.44285 21.8693 7.86165 21.4505L22.0192 7.29289C23.1908 6.12132 23.1908 4.22183 22.0192 3.05025L20.8477 1.87868ZM18.0192 3.29289C18.4098 2.90237 19.0429 2.90237 19.4335 3.29289L20.605 4.46447C20.9956 4.85499 20.9956 5.48815 20.605 5.87868L17.9334 8.55027L15.3477 5.96448L18.0192 3.29289ZM13.9334 7.3787L3.86165 17.4505C3.72205 17.5901 3.6269 17.7679 3.58818 17.9615L3.00111 20.8968L5.93645 20.3097C6.13004 20.271 6.30784 20.1759 6.44744 20.0363L16.5192 9.96448L13.9334 7.3787Z" fill="#0F0F0F"/>
-							</svg>
-						</button>
-						<button class="btn btn-square btn-ghost" aria-label="folder-open-{folder.id}" onclick={(e) => openFolder(e, folder.id)}>
+						<div class="content-center">
+							<div>{entry.description}</div>
+						</div>
+						<button class="btn btn-square btn-ghost" aria-label="entry-open-{entry.id}" onclick={(e) => openEntry(e, entry.id)}>
 							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="black" width="16px" height="16px" viewBox="0 0 24 24">
 								<path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 							</svg>
@@ -133,9 +148,9 @@
 				</a>
 				{/each}
 			</ul>
-			<button class="btn btn-primary btn-block my-4" onclick={addFolder}> Ajouter un dossier</button>
+			<button class="btn btn-primary btn-block my-4" onclick={addEntry}>Ajouter un accès</button>
 			{#key modalKey}
-				<FolderDialog {token} folder={current_folder} bind:folders/>
+				<EntryDialog {token} folderId={folder?.id} bind:entries/>
 			{/key}
 		{:else}
 			<div class="flex justify-center">
