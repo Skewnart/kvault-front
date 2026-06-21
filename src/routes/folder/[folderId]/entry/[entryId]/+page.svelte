@@ -7,6 +7,7 @@
     import { get_encoded, put_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
     import type { EncodedDTO } from '$lib/models/encoded_dto';
+    import type { FolderDTO } from '$lib/models/folder_dto';
 	
 	const TITLE = "Kvault";
 
@@ -47,23 +48,13 @@
 		}
 		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
 
-		const entries_encoded = await get_encoded(token, `folder/${data.folderId}`);
-		try {
-			const entries = JSON.parse(wasm.read_encoded(
-				master_password!,
-				user_envelope.master_salt,
-				user_envelope.enc_sk,
-				user_envelope.sk_nonce,
-				entries_encoded.encoded,
-				entries_encoded.enc_kyber,
-				entries_encoded.enc_nonce
-			)) as EntryDTO[];
-
-			entry = entries.find((e) => e.id === data.entryId);
-		} catch (decryptError) {
-			error = "Mot de passe de chiffrement erroné";
-			return;
+		const folders_session = sessionStorage.getItem("folders");
+		if (folders_session == null) {
+			error = "Les dossiers devraient être présents après connexion.";
 		}
+		const folders = JSON.parse(folders_session!) as FolderDTO[];
+		const folder = folders.find((folder) => folder.id === data.folderId);
+		entry = folder?.entries.find((e) => e.id === data.entryId);
 
 		const entry_encoded = await get_encoded(token, `entry/${data.entryId}`);
 		try {
