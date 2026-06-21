@@ -44,7 +44,7 @@
 		post_encoded(token, "folder/new", enc_data_str)
 			.then(id => {
 				const folder : FolderDTO = {
-					id, name: folder_name
+					id, name: folder_name, entries: []
 				};
 				
 				folders.push(folder);

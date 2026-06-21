@@ -58,31 +58,46 @@
 		const folders = JSON.parse(folders_session!) as FolderDTO[];
 		folder = folders.find((folder) => folder.id === data.folderId);
 
-		const master_password = sessionStorage.getItem("mp");
-		if (master_password == null) {
-			error = "Le mot de passe maître ne peut pas être utilisé.";
+		console.log("folder?.entries", folder?.entries);
+		if (folder?.entries != undefined)
+		{
+			entries = folder?.entries;
 		}
+		else {
+			const master_password = sessionStorage.getItem("mp");
+			if (master_password == null) {
+				error = "Le mot de passe maître ne peut pas être utilisé.";
+			}
+	
+			const user_envelope_session = sessionStorage.getItem("envelope");
+			if (user_envelope_session == null) {
+				error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
+			}
+			const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+	
+			const entries_encoded = await get_encoded(token, `folder/${folder?.id}`);
+			try {
+				entries = JSON.parse(wasm.read_encoded(
+					master_password!,
+					user_envelope.master_salt,
+					user_envelope.enc_sk,
+					user_envelope.sk_nonce,
+					entries_encoded.encoded,
+					entries_encoded.enc_kyber,
+					entries_encoded.enc_nonce
+				)) as EntryDTO[];
 
-		const user_envelope_session = sessionStorage.getItem("envelope");
-		if (user_envelope_session == null) {
-			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
-		}
-		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+				folder!.entries = entries;
+				const idx = folders.findIndex((f: FolderDTO) => f.id === folder?.id);
+				if (idx >= 0) {
+					folders[idx] = folder!;
+				}
+				sessionStorage.setItem("folders", JSON.stringify(folders));
 
-		const entries_encoded = await get_encoded(token, `folder/${folder?.id}`);
-		try {
-			entries = JSON.parse(wasm.read_encoded(
-				master_password!,
-				user_envelope.master_salt,
-				user_envelope.enc_sk,
-				user_envelope.sk_nonce,
-				entries_encoded.encoded,
-				entries_encoded.enc_kyber,
-				entries_encoded.enc_nonce
-			)) as EntryDTO[];
-		} catch (decryptError) {
-			error = "Mot de passe de chiffrement erroné";
-			return;
+			} catch (decryptError) {
+				error = "Mot de passe de chiffrement erroné";
+				return;
+			}
 		}
 	});
 

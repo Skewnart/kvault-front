@@ -9,6 +9,7 @@
 	
 	const TITLE = "Kvault";
 
+	// TODO : Mettre en session storage les entries chargées et ne pas les recharger. Pareil pour les folders.
 	// TODO : Mettre en place des layout pour l'accueil, la page folder et entry
 	// TODO : Changer les features de modif (pas de modale poru ça) et suppression.
 	// TODO : Changer le thème (couleurs) pour se conformer un peu plus au logo
@@ -51,7 +52,7 @@
 		if (folders_session == null) {
 			error = "Les dossiers devraient être présents après connexion.";
 		}
-		folders = JSON.parse(folders_session!);
+		folders = JSON.parse(folders_session!) as FolderDTO[];
 	});
 
 </script>
