@@ -18,6 +18,8 @@
 	let entries = $state<EntryDTO[] | undefined>(undefined);
 	let modalKey = $state<number>(0);
 
+	// TODO : La description ne devrait pas être obligatoire
+
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
 	}
@@ -83,6 +85,38 @@
 			return;
 		}
 	});
+
+	/*
+	function persistFolderAndClose(envelope : RegisterEnvelopeDTO, folder?: FolderDTO) {
+		if (!!folder) {
+			const idx = folders.findIndex((f: FolderDTO) => f.id === folder?.id);
+			if (idx >= 0) {
+				folders[idx] = folder;
+			} else {
+				folders.push(folder);
+			}
+		}
+		
+		const folders_str = JSON.stringify(folders);
+		sessionStorage.setItem("folders", folders_str);
+
+		const enc_folders = wasm.create_encoded(folders_str, envelope.pk);
+		const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
+		const enc_folders_str = JSON.stringify({ enc_data: enc_folders_dto });
+
+		post_encoded(token, "folder", enc_folders_str).then(() => {
+			const modal = document.getElementById('add_folder_modal') as HTMLDialogElement | null;
+			if (modal) {
+				modal.close();
+				callPending = false;
+			}
+		}).catch(err => {
+			console.error(err);
+			error = "Erreur lors de l'envoi des dossiers";
+			callPending = false;
+		});
+	}
+	*/
 
 </script>
 
