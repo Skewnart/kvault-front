@@ -45,10 +45,7 @@
 				};
 
 				entries.push(entry);
-				
 				const entries_str = JSON.stringify(entries);
-				sessionStorage.setItem("entries", entries_str);
-
 				const enc_entries = wasm.create_encoded(entries_str, envelope.pk);
 				const enc_entries_dto : EncodedDTO = { enc_kyber: enc_entries.enc_kyber, enc_nonce: enc_entries.enc_nonce, encoded: enc_entries.encoded };
 				const enc_entries_str = JSON.stringify({ enc_data: enc_entries_dto });
