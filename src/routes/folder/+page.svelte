@@ -5,6 +5,7 @@
     import { goto } from '$app/navigation';
 	
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
+	import { foldersExist, getFolders } from '$lib/session_storage_api';
     import FolderDialog from './FolderDialog.svelte';
 	
 	const TITLE = "Kvault";
@@ -48,11 +49,11 @@
 	onMount(async () => {
 		await wasm.default();
 
-		const folders_session = sessionStorage.getItem("folders");
-		if (folders_session == null) {
+		if (!foldersExist()){
 			error = "Les dossiers devraient être présents après connexion.";
 		}
-		folders = JSON.parse(folders_session!) as FolderDTO[];
+
+		folders = getFolders();	
 	});
 
 </script>
