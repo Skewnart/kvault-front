@@ -9,6 +9,7 @@
     import type { EntryDTO } from '$lib/models/entry_dto';
     import { get_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
+    import { addAllEntriesToFolder, getFolderById } from '$lib/session_storage_api';
 	
 	const TITLE = "Kvault";
 
@@ -51,14 +52,8 @@
 		
 		await wasm.default();
 
-		const folders_session = sessionStorage.getItem("folders");
-		if (folders_session == null) {
-			error = "Les dossiers devraient être présents après connexion.";
-		}
-		const folders = JSON.parse(folders_session!) as FolderDTO[];
-		folder = folders.find((folder) => folder.id === data.folderId);
-
-		console.log("folder?.entries", folder?.entries);
+		folder = getFolderById(data.folderId);
+		
 		if (folder?.entries != undefined)
 		{
 			entries = folder?.entries;
@@ -88,12 +83,7 @@
 				)) as EntryDTO[];
 
 				folder!.entries = entries;
-				const idx = folders.findIndex((f: FolderDTO) => f.id === folder?.id);
-				if (idx >= 0) {
-					folders[idx] = folder!;
-				}
-				sessionStorage.setItem("folders", JSON.stringify(folders));
-
+				addAllEntriesToFolder(data.folderId, entries);
 			} catch (decryptError) {
 				error = "Mot de passe de chiffrement erroné";
 				return;

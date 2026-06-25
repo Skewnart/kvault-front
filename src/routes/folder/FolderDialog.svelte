@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { RegisterEnvelopeDTOFrom, type RegisterEnvelopeDTO } from "../../lib/models/register_envelope_dto";
+	import { RegisterEnvelopeDTOFrom, type RegisterEnvelopeDTO } from "$lib/models/register_envelope_dto";
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
-	import type { EncodedDTO } from "../../lib/models/encoded_dto";
-	import { post_encoded } from "../../lib/api";
-	import type { FolderDTO } from "../../lib/models/folder_dto";
+	import type { EncodedDTO } from "$lib/models/encoded_dto";
+	import { post_encoded } from "$lib/api";
+	import type { FolderDTO } from "$lib/models/folder_dto";
+    import { storeFolder } from "$lib/session_storage_api";
 
 	let { token, folders = $bindable() } = $props();
 
@@ -47,11 +48,11 @@
 					id, name: folder_name, entries: []
 				};
 				
+				storeFolder(folder);
+
 				folders.push(folder);
 		
 				const folders_str = JSON.stringify(folders);
-				sessionStorage.setItem("folders", folders_str);
-
 				const enc_folders = wasm.create_encoded(folders_str, envelope.pk);
 				const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
 				const enc_folders_str = JSON.stringify({ enc_data: enc_folders_dto });

@@ -7,7 +7,7 @@
     import { get_encoded, put_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
     import type { EncodedDTO } from '$lib/models/encoded_dto';
-    import type { FolderDTO } from '$lib/models/folder_dto';
+    import { getEntryById } from '$lib/session_storage_api';
 	
 	const TITLE = "Kvault";
 
@@ -48,13 +48,7 @@
 		}
 		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
 
-		const folders_session = sessionStorage.getItem("folders");
-		if (folders_session == null) {
-			error = "Les dossiers devraient être présents après connexion.";
-		}
-		const folders = JSON.parse(folders_session!) as FolderDTO[];
-		const folder = folders.find((folder) => folder.id === data.folderId);
-		entry = folder?.entries.find((e) => e.id === data.entryId);
+		entry = getEntryById(data.folderId, data.entryId);
 
 		const entry_encoded = await get_encoded(token, `entry/${data.entryId}`);
 		try {

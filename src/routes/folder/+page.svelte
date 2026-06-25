@@ -10,7 +10,6 @@
 	
 	const TITLE = "Kvault";
 
-	// TODO : Faire l'actualisation du sessionstorage pour l'ajout d'une entry dans un folder
 	// TODO : Mettre en place des layout pour l'accueil, la page folder et entry
 	// TODO : Changer les features de modif (pas de modale poru ça) et suppression.
 	// TODO : Changer le thème (couleurs) pour se conformer un peu plus au logo

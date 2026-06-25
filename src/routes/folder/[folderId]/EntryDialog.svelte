@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { RegisterEnvelopeDTOFrom, type RegisterEnvelopeDTO } from "../../../lib/models/register_envelope_dto";
+	import { RegisterEnvelopeDTOFrom, type RegisterEnvelopeDTO } from "$lib/models/register_envelope_dto";
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
-	import type { EncodedDTO } from "../../../lib/models/encoded_dto";
-	import { post_encoded, put_encoded } from "../../../lib/api";
+	import type { EncodedDTO } from "$lib/models/encoded_dto";
+	import { post_encoded, put_encoded } from "$lib/api";
     import type { EntryDTO } from "$lib/models/entry_dto";
+    import { addEntryToFolder } from "$lib/session_storage_api";
 
 	let { token, folderId, entries = $bindable() } = $props();
 
@@ -43,6 +44,8 @@
 				const entry : EntryDTO = {
 					id, name: entryName, description: entryDescription
 				};
+
+				addEntryToFolder(folderId, entry);
 
 				entries.push(entry);
 				const entries_str = JSON.stringify(entries);
