@@ -1,7 +1,7 @@
 import type { EntryDTO } from "./models/entry_dto";
 import type { FolderDTO } from "./models/folder_dto";
 
-const STORAGE_KEY = 'folders';
+const STORAGE_KEY = "folders";
 
 export function foldersExist(): boolean {
   return sessionStorage.getItem(STORAGE_KEY) != null;
@@ -30,6 +30,11 @@ export function getFolderById(folderId: string): FolderDTO | undefined {
   return folders.find(f => f.id === folderId);
 }
 
+export function getEntryById(folderId: string, entryId: string): EntryDTO | undefined {
+  const folder = getFolderById(folderId);
+  return folder?.entries.find(e => e.id === entryId);
+}
+
 export function addEntryToFolder(folderId: string, entry: EntryDTO): void {
   const folder = getFolderById(folderId);
   
@@ -42,6 +47,15 @@ export function addEntryToFolder(folderId: string, entry: EntryDTO): void {
       folder.entries.push(entry);
     }
     
+    storeFolder(folder);
+  }
+}
+
+export function addAllEntriesToFolder(folderId: string, entries: EntryDTO[]): void {
+  const folder = getFolderById(folderId);
+  
+  if (folder) {
+    folder.entries = entries;    
     storeFolder(folder);
   }
 }
