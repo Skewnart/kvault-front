@@ -9,17 +9,19 @@
     import type { EntryDTO } from '$lib/models/entry_dto';
     import { get_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
-    import { addAllEntriesToFolder, getFolderById } from '$lib/session_storage_api';
-	
-	const TITLE = "Kvault";
+    import { addAllEntriesToFolder, getFolderById, removeFolder, storeFolder } from '$lib/session_storage_api';
 
-	const props = $props();
-	let error = $state("");
-	let folder = $state<FolderDTO | undefined>(undefined);
-	let entries = $state<EntryDTO[] | undefined>(undefined);
-	let modalKey = $state<number>(0);
+    const TITLE = "Kvault";
 
-	// TODO : La description ne devrait pas être obligatoire
+    const props = $props();
+    let error = $state("");
+    let folder = $state<FolderDTO | undefined>(undefined);
+    let entries = $state<EntryDTO[] | undefined>(undefined);
+    let modalKey = $state<number>(0);
+    let editingTitle = $state<boolean>(false);
+    let titleInput = $state<String>("");
+
+	// TODO faire la maj DB lors de l'update ou suppression title.
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -33,20 +35,6 @@
 		error = "Aucun dossier n'a été demandé";
 	}
 	const token = data.token;
-
-	function openEntry(e: Event, id: String) {
-		e.preventDefault();
-		goto(`/folder/${data.folderId}/entry/${id}`);
-	}
-
-	async function addEntry() {
-		modalKey = modalKey + 1;
-		await tick();
-		const modal = document.getElementById('add_entry_modal') as HTMLDialogElement | null;
-		if (modal) {
-			modal.showModal();
-		}
-	}
 	
 	onMount(async () => {
 		
@@ -91,37 +79,61 @@
 		}
 	});
 
-	/*
-	function persistFolderAndClose(envelope : RegisterEnvelopeDTO, folder?: FolderDTO) {
-		if (!!folder) {
-			const idx = folders.findIndex((f: FolderDTO) => f.id === folder?.id);
-			if (idx >= 0) {
-				folders[idx] = folder;
-			} else {
-				folders.push(folder);
-			}
-		}
-		
-		const folders_str = JSON.stringify(folders);
-		sessionStorage.setItem("folders", folders_str);
-
-		const enc_folders = wasm.create_encoded(folders_str, envelope.pk);
-		const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
-		const enc_folders_str = JSON.stringify({ enc_data: enc_folders_dto });
-
-		post_encoded(token, "folder", enc_folders_str).then(() => {
-			const modal = document.getElementById('add_folder_modal') as HTMLDialogElement | null;
-			if (modal) {
-				modal.close();
-				callPending = false;
-			}
-		}).catch(err => {
-			console.error(err);
-			error = "Erreur lors de l'envoi des dossiers";
-			callPending = false;
-		});
+	function openEntry(e: Event, id: String) {
+		e.preventDefault();
+		goto(`/folder/${data.folderId}/entry/${id}`);
 	}
-	*/
+
+	async function addEntry() {
+		modalKey = modalKey + 1;
+		await tick();
+		const modal = document.getElementById('add_entry_modal') as HTMLDialogElement | null;
+		if (modal) {
+			modal.showModal();
+		}
+	}
+
+    function startEditingTitle() {
+        if (!folder) return;
+        titleInput = folder.name;
+        editingTitle = true;
+    }
+
+    function cancelEditingTitle() {
+        editingTitle = false;
+    }
+
+    function saveTitle() {
+        if (!folder) return;
+        const trimmed = titleInput.trim();
+        if (!trimmed) {
+            error = "Le nom du dossier ne peut pas être vide.";
+            return;
+        }
+        folder.name = trimmed;	
+        storeFolder(folder);
+        editingTitle = false;
+    }
+
+    function handleTitleKeydown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saveTitle();
+        }
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            cancelEditingTitle();
+        }
+    }
+
+    function deleteCurrentFolder() {
+        if (!folder) return;
+		// TODO faire une vraie modale pour delander ka confirmation
+        const confirmed = window.confirm(`Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`);
+        if (!confirmed) return;
+        removeFolder(folder.id);
+        goto('/folder');
+    }
 
 </script>
 
@@ -142,7 +154,37 @@
 			</div>
 		{/if}
 
-		<h1>{folder?.name}</h1>
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+				{#if editingTitle}
+					<div class="flex-1">
+						<input
+							class="input input-bordered w-full"
+							type="text"
+							bind:value={titleInput}
+							onkeydown={handleTitleKeydown}
+							aria-label="Nom du dossier"
+						/>
+					</div>
+					<div class="flex gap-2">
+						<button class="btn btn-success" type="button" onclick={saveTitle}>Valider</button>
+						<button class="btn btn-secondary" type="button" onclick={cancelEditingTitle}>Annuler</button>
+					</div>
+				{:else}
+					<h1 class="text-2xl font-bold">{folder?.name}</h1>
+					<div class="flex gap-2">
+						<button class="btn btn-square btn-ghost" type="button" aria-label="Modifier le dossier" onclick={startEditingTitle}>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M4 20h4.586a1 1 0 00.707-.293l9.414-9.414a1 1 0 000-1.414l-3.586-3.586a1 1 0 00-1.414 0L4 14.586V20z" />
+							</svg>
+						</button>
+						<button class="btn btn-square btn-ghost text-error" type="button" aria-label="Supprimer le dossier" onclick={deleteCurrentFolder}>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M19 7L5 7M10 11V17M14 11V17M5 7L6 19a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+							</svg>
+						</button>
+					</div>
+				{/if}
+			</div>
 
 		{#if !!entries}
 			<ul class="list bg-base-100 rounded-box shadow-md ">
