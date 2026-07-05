@@ -96,7 +96,7 @@ export async function put_encoded(token: String, endpoint: String, id: number, b
 
 export async function delete_by_id(token: String, endpoint: String, id: number) : Promise<string> {
 	return fetch(`${PUBLIC_API_URL}/${endpoint}/${id}`, {
-		method: 'POST',
+		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${token}`
@@ -108,8 +108,8 @@ export async function delete_by_id(token: String, endpoint: String, id: number) 
 
 
 export async function delete_entries(token: String, ids : number[]) : Promise<string> {
-	return fetch(`${PUBLIC_API_URL}/entry/`, {
-		method: 'POST',
+	return fetch(`${PUBLIC_API_URL}/entry`, {
+		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${token}`

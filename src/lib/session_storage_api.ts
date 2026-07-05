@@ -69,7 +69,7 @@ export function removeEntryFromFolder(folderId: string, entryId: string): void {
   }
 }
 
-export function removeFolder(folderId: string): void {
+export function removeFolder(folderId: String): void {
   const folders = getFolders();
   const filteredFolders = folders.filter(f => f.id !== folderId);
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filteredFolders));

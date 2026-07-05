@@ -7,9 +7,10 @@
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
     import EntryDialog from './EntryDialog.svelte';
     import type { EntryDTO } from '$lib/models/entry_dto';
-    import { get_encoded } from '$lib/api';
+    import { delete_by_id, delete_entries, get_encoded, post_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
-    import { addAllEntriesToFolder, getFolderById, removeFolder, storeFolder } from '$lib/session_storage_api';
+    import { addAllEntriesToFolder, getFolderById, getFolders, removeFolder, storeFolder } from '$lib/session_storage_api';
+    import type { EncodedDTO } from '$lib/models/encoded_dto';
 
     const TITLE = "Kvault";
 
@@ -112,7 +113,14 @@
         }
         folder.name = trimmed;	
         storeFolder(folder);
-        editingTitle = false;
+		sendFolders().then(() => {
+			editingTitle = false;
+			alert("Element sauvegardé !"); // todo à changer avec DaisyUI
+		}).catch(err => {
+			console.error(err);
+			error = "Erreur lors de l'envoi des dossiers";
+        	editingTitle = false;
+		});
     }
 
     function handleTitleKeydown(event: KeyboardEvent) {
@@ -131,9 +139,40 @@
 		// TODO faire une vraie modale pour delander ka confirmation
         const confirmed = window.confirm(`Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`);
         if (!confirmed) return;
-        removeFolder(folder.id);
-        goto('/folder');
+
+		removeFolder(folder.id);
+		
+		const entryIds: number[] = (folder.entries ?? []).map(entry => Number(entry.id));
+		console.log("entryIds", entryIds);
+		delete_entries(token, entryIds).then(() => {
+			delete_by_id(token, "folder", Number(folder?.id)).then(() => {
+				sendFolders().then(() => {
+					editingTitle = false;
+					goto('/folder');
+				}).catch(err => {
+					console.error(err);
+					error = "Erreur lors de la suppression des dossiers";
+					editingTitle = false;
+				});
+			})
+		});
     }
+
+	function sendFolders() : Promise<string> {
+		const user_envelope_session = sessionStorage.getItem("envelope");
+		if (user_envelope_session == null) {
+			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
+		}
+		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+		
+		const folders = getFolders();
+		const folders_str = JSON.stringify(folders);
+		const enc_folders = wasm.create_encoded(folders_str, user_envelope.pk);
+		const enc_folders_dto : EncodedDTO = { enc_kyber: enc_folders.enc_kyber, enc_nonce: enc_folders.enc_nonce, encoded: enc_folders.encoded };
+		const enc_folders_str = JSON.stringify({ enc_data: enc_folders_dto });
+
+		return post_encoded(token, "folder", enc_folders_str);
+	}
 
 </script>
 
