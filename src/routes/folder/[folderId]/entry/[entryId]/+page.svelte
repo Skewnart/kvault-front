@@ -4,10 +4,11 @@
 	
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
     import type { EntryDTO } from '$lib/models/entry_dto';
-    import { get_encoded, put_encoded } from '$lib/api';
+    import { delete_by_id, get_encoded, put_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
     import type { EncodedDTO } from '$lib/models/encoded_dto';
-    import { getEntryById } from '$lib/session_storage_api';
+    import { addEntryToFolder, getEntryById, getFolderById, getFolders, removeEntryFromFolder, removeFolder, storeFolder } from '$lib/session_storage_api';
+    import { goto } from '$app/navigation';
 	
 	const TITLE = "Kvault";
 
@@ -19,6 +20,11 @@
 	let entry = $state<EntryDTO | undefined>(undefined);
 	let entry_details = $state<string | undefined>(undefined);
 	let callPending = $state<boolean | undefined>(false);
+	
+	// META INFOS VARS
+    let editingMetaInfos = $state<boolean>(false);
+    let nameInput = $state<String>("");
+    let descriptionInput = $state<String>("");
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -82,12 +88,92 @@
 		
 		put_encoded(token, "entry", data.entryId, enc_details_str).then(() => {
 			callPending = false;
+			alert("Données enregistrées !");
 		}).catch(err => {
 			console.error(err);
 			error = "Erreur lors de l'envoi des informations";
 			callPending = false;
 		});
 	}
+
+    function handleTitleKeydown(event: KeyboardEvent) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saveMetaInformations();
+        }
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            cancelEditingMetaInformations();
+        }
+    }
+
+    function saveMetaInformations() {
+        if (!entry) return;
+        const trimmedName = nameInput.trim();
+        if (!trimmedName) {
+            error = "Le nom de l'entrée ne peut pas être vide.";
+            return;
+        }
+        entry.name = trimmedName;
+		entry.description = descriptionInput.trim();
+
+		addEntryToFolder(data.folderId, entry);
+		sendEntries().then(() => {
+			editingMetaInfos = false;
+			alert("Element sauvegardé !"); // todo à changer avec DaisyUI
+		}).catch(err => {
+			console.error(err);
+			error = "Erreur lors de l'envoi des entrées";
+        	editingMetaInfos = false;
+		});
+    }
+
+	function sendEntries() : Promise<string> {
+		const user_envelope_session = sessionStorage.getItem("envelope");
+		if (user_envelope_session == null) {
+			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
+		}
+		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+		
+		const folder = getFolderById(data.folderId);
+		const entries_str = JSON.stringify(folder?.entries);
+		const enc_entries = wasm.create_encoded(entries_str, user_envelope.pk);
+		const enc_entries_dto : EncodedDTO = { enc_kyber: enc_entries.enc_kyber, enc_nonce: enc_entries.enc_nonce, encoded: enc_entries.encoded };
+		const enc_entries_str = JSON.stringify({ enc_data: enc_entries_dto });
+
+		return put_encoded(token, "folder", data.folderId, enc_entries_str);
+	}
+
+    function cancelEditingMetaInformations() {
+        editingMetaInfos = false;
+    }
+
+    function startEditingMetaInformations() {
+        if (!entry) return;
+        nameInput = entry.name;
+		descriptionInput = entry.description;
+        editingMetaInfos = true;
+    }
+
+    function deleteCurrentEntry() {
+        if (!entry) return;
+		// TODO faire une vraie modale pour demander la confirmation
+        const confirmed = window.confirm(`Supprimer le dossier "${entry.name}" ? Cette action est irréversible.`);
+        if (!confirmed) return;
+
+		removeEntryFromFolder(data.folderId, entry.id);
+		
+		delete_by_id(token, "entry", Number(entry?.id)).then(() => {
+			sendEntries().then(() => {
+				editingMetaInfos = false;
+				goto(`/folder/${data.folderId}`);
+			}).catch(err => {
+				console.error(err);
+				error = "Erreur lors de la suppression des dossiers";
+				editingMetaInfos = false;
+			});
+		});
+    }
 
 </script>
 
@@ -108,12 +194,51 @@
 			</div>
 		{/if}
 
-		{#if entry != undefined}
-			<h1>{entry?.name}</h1>
-			<h2>{entry?.description}</h2>
+		{#if editingMetaInfos}
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+				<div class="flex-1">
+					<input
+						class="input input-bordered w-full"
+						type="text"
+						bind:value={nameInput}
+						onkeydown={handleTitleKeydown}
+						aria-label="Nom de l'entrée"
+					/>
+				</div>
+				<div class="flex gap-2">
+					<button class="btn btn-success" type="button" onclick={saveMetaInformations}>Valider</button>
+					<button class="btn btn-secondary" type="button" onclick={cancelEditingMetaInformations}>Annuler</button>
+				</div>
+			</div>
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+				<div class="flex-1">
+					<input
+						class="input input-bordered w-full"
+						type="text"
+						bind:value={descriptionInput}
+						onkeydown={handleTitleKeydown}
+						aria-label="Description de l'entrée"
+					/>
+				</div>
+			</div>
 		{:else}
-			<div class="flex justify-center">
-				<span class="loading loading-spinner text-primary"></span>
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+				<h1 class="text-2xl font-bold">{entry?.name}</h1>
+				<div class="flex gap-2">
+					<button class="btn btn-square btn-ghost" type="button" aria-label="Modifier le dossier" onclick={startEditingMetaInformations}>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M4 20h4.586a1 1 0 00.707-.293l9.414-9.414a1 1 0 000-1.414l-3.586-3.586a1 1 0 00-1.414 0L4 14.586V20z" />
+						</svg>
+					</button>
+					<button class="btn btn-square btn-ghost text-error" type="button" aria-label="Supprimer le dossier" onclick={deleteCurrentEntry}>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M19 7L5 7M10 11V17M14 11V17M5 7L6 19a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+						</svg>
+					</button>
+				</div>
+			</div>
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+				<h2>{entry?.description}</h2>
 			</div>
 		{/if}
 

@@ -60,7 +60,7 @@ export function addAllEntriesToFolder(folderId: string, entries: EntryDTO[]): vo
   }
 }
 
-export function removeEntryFromFolder(folderId: string, entryId: string): void {
+export function removeEntryFromFolder(folderId: string, entryId: String): void {
   const folder = getFolderById(folderId);
   
   if (folder) {

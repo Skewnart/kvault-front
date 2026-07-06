@@ -10,7 +10,6 @@
 	
 	const TITLE = "Kvault";
 
-	// TODO : Changer les features de modif (pas de modale pour ça) et suppression.
 	// TODO : Changer le thème (couleurs) pour se conformer un peu plus au logo
 	// TODO : Refaire le design sur toutes les pages APRES être passé sur toutes les pages pour les FEATURES qui ne changeront pas avec le design
 

@@ -42,8 +42,8 @@
 		await wasm.default();
 
 		folder = getFolderById(data.folderId);
-		
-		if (folder?.entries != undefined)
+
+		if (folder?.entries != undefined && folder?.entries.length > 0)
 		{
 			entries = folder?.entries;
 		}
@@ -137,7 +137,7 @@
     function deleteCurrentFolder() {
         if (!folder) return;
 		// TODO faire une vraie modale pour delander ka confirmation
-        const confirmed = window.confirm(`Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`);
+        const confirmed = window.confirm(`Supprimer l'entrée "${folder.name}" ? Cette action est irréversible.`);
         if (!confirmed) return;
 
 		removeFolder(folder.id);
@@ -194,36 +194,36 @@
 		{/if}
 
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-				{#if editingTitle}
-					<div class="flex-1">
-						<input
-							class="input input-bordered w-full"
-							type="text"
-							bind:value={titleInput}
-							onkeydown={handleTitleKeydown}
-							aria-label="Nom du dossier"
-						/>
-					</div>
-					<div class="flex gap-2">
-						<button class="btn btn-success" type="button" onclick={saveTitle}>Valider</button>
-						<button class="btn btn-secondary" type="button" onclick={cancelEditingTitle}>Annuler</button>
-					</div>
-				{:else}
-					<h1 class="text-2xl font-bold">{folder?.name}</h1>
-					<div class="flex gap-2">
-						<button class="btn btn-square btn-ghost" type="button" aria-label="Modifier le dossier" onclick={startEditingTitle}>
-							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M4 20h4.586a1 1 0 00.707-.293l9.414-9.414a1 1 0 000-1.414l-3.586-3.586a1 1 0 00-1.414 0L4 14.586V20z" />
-							</svg>
-						</button>
-						<button class="btn btn-square btn-ghost text-error" type="button" aria-label="Supprimer le dossier" onclick={deleteCurrentFolder}>
-							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-								<path stroke-linecap="round" stroke-linejoin="round" d="M19 7L5 7M10 11V17M14 11V17M5 7L6 19a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
-							</svg>
-						</button>
-					</div>
-				{/if}
-			</div>
+			{#if editingTitle}
+				<div class="flex-1">
+					<input
+						class="input input-bordered w-full"
+						type="text"
+						bind:value={titleInput}
+						onkeydown={handleTitleKeydown}
+						aria-label="Nom du dossier"
+					/>
+				</div>
+				<div class="flex gap-2">
+					<button class="btn btn-success" type="button" onclick={saveTitle}>Valider</button>
+					<button class="btn btn-secondary" type="button" onclick={cancelEditingTitle}>Annuler</button>
+				</div>
+			{:else}
+				<h1 class="text-2xl font-bold">{folder?.name}</h1>
+				<div class="flex gap-2">
+					<button class="btn btn-square btn-ghost" type="button" aria-label="Modifier le dossier" onclick={startEditingTitle}>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M4 20h4.586a1 1 0 00.707-.293l9.414-9.414a1 1 0 000-1.414l-3.586-3.586a1 1 0 00-1.414 0L4 14.586V20z" />
+						</svg>
+					</button>
+					<button class="btn btn-square btn-ghost text-error" type="button" aria-label="Supprimer le dossier" onclick={deleteCurrentFolder}>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M19 7L5 7M10 11V17M14 11V17M5 7L6 19a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+						</svg>
+					</button>
+				</div>
+			{/if}
+		</div>
 
 		{#if !!entries}
 			<ul class="list bg-base-100 rounded-box shadow-md ">
