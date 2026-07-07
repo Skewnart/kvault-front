@@ -22,8 +22,6 @@
     let editingTitle = $state<boolean>(false);
     let titleInput = $state<String>("");
 
-	// TODO faire la maj DB lors de l'update ou suppression title.
-
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
 	}
@@ -136,7 +134,7 @@
 
     function deleteCurrentFolder() {
         if (!folder) return;
-		// TODO faire une vraie modale pour delander ka confirmation
+		// TODO faire une vraie modale pour demander la confirmation
         const confirmed = window.confirm(`Supprimer l'entrée "${folder.name}" ? Cette action est irréversible.`);
         if (!confirmed) return;
 
