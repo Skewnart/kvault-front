@@ -6,6 +6,7 @@
 	
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
     import EntryDialog from './EntryDialog.svelte';
+    import Toast from './Toast.svelte';
     import type { EntryDTO } from '$lib/models/entry_dto';
     import { delete_by_id, delete_entries, get_encoded, post_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
@@ -21,6 +22,7 @@
     let modalKey = $state<number>(0);
     let editingTitle = $state<boolean>(false);
     let titleInput = $state<String>("");
+    let toast = $state<{ message: string; alertType?: 'info' | 'success' | 'warning' | 'error'; onConfirm?: () => void } | undefined>(undefined);
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -113,7 +115,7 @@
         storeFolder(folder);
 		sendFolders().then(() => {
 			editingTitle = false;
-			alert("Element sauvegardé !"); // todo à changer avec DaisyUI
+			showToast('success', "Dossier sauvegardé !");
 		}).catch(err => {
 			console.error(err);
 			error = "Erreur lors de l'envoi des dossiers";
@@ -132,11 +134,32 @@
         }
     }
 
-    function deleteCurrentFolder() {
+    function hideToast() {
+        toast = undefined;
+    }
+
+    function showToast(alertType: 'info' | 'success' | 'warning' | 'error', message: string, onConfirm?: () => void) {
+        toast = {
+            message,
+			alertType,
+            onConfirm
+        };
+    }
+
+    function requestDeleteCurrentFolder() {
         if (!folder) return;
-		// TODO faire une vraie modale pour demander la confirmation
-        const confirmed = window.confirm(`Supprimer l'entrée "${folder.name}" ? Cette action est irréversible.`);
-        if (!confirmed) return;
+        toast = {
+            message: `Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`,
+			alertType: 'warning',
+            onConfirm: () => {
+                hideToast();
+                performDeleteCurrentFolder();
+            }
+        };
+    }
+
+    function performDeleteCurrentFolder() {
+        if (!folder) return;
 
 		removeFolder(folder.id);
 		
@@ -191,6 +214,14 @@
 			</div>
 		{/if}
 
+		<Toast
+			visible={toast !== undefined}
+			message={toast?.message ?? ""}
+			alertType={toast?.alertType}
+			onConfirm={toast?.onConfirm}
+			onCancel={hideToast}
+		/>
+
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 			{#if editingTitle}
 				<div class="flex-1">
@@ -214,7 +245,7 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M4 20h4.586a1 1 0 00.707-.293l9.414-9.414a1 1 0 000-1.414l-3.586-3.586a1 1 0 00-1.414 0L4 14.586V20z" />
 						</svg>
 					</button>
-					<button class="btn btn-square btn-ghost text-error" type="button" aria-label="Supprimer le dossier" onclick={deleteCurrentFolder}>
+					<button class="btn btn-square btn-ghost text-error" type="button" aria-label="Supprimer le dossier" onclick={requestDeleteCurrentFolder}>
 						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M19 7L5 7M10 11V17M14 11V17M5 7L6 19a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
 						</svg>

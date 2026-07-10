@@ -12,6 +12,9 @@
 
 	// TODO : Refaire le design sur toutes les pages APRES être passé sur toutes les pages pour les FEATURES qui ne changeront pas avec le design
 
+	// TODO afficher le temps restant avant relog ?
+	// TODO Rediriger vers le logo quand le token est dépassé
+
 	const props = $props();
 	let error = $state("");
 	let folders = $state<FolderDTO[] | undefined>(undefined);
