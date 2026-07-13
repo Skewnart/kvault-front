@@ -66,7 +66,7 @@
 				entry_encoded.encoded,
 				entry_encoded.enc_kyber,
 				entry_encoded.enc_nonce
-			);
+			).trim();
 		} catch (decryptError) {
 			error = "Mot de passe de chiffrement erroné";
 			return;
@@ -81,8 +81,12 @@
 			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
 		}
 		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
+
+		if (entry_details == undefined || entry_details == "") {
+			entry_details = " ";
+		}
 		
-		const enc_details = wasm.create_encoded(entry_details ?? "", user_envelope.pk);
+		const enc_details = wasm.create_encoded(entry_details, user_envelope.pk);
 		const enc_details_dto : EncodedDTO = { enc_kyber: enc_details.enc_kyber, enc_nonce: enc_details.enc_nonce, encoded: enc_details.encoded };
 		const enc_details_str = JSON.stringify({ enc_data: enc_details_dto });
 		
@@ -94,6 +98,8 @@
 			error = "Erreur lors de l'envoi des informations";
 			callPending = false;
 		});
+
+		entry_details = entry_details.trim();
 	}
 
     function handleTitleKeydown(event: KeyboardEvent) {
@@ -244,7 +250,7 @@
 
 		{#if entry_details != undefined}
 			<textarea class="textarea" placeholder="Ecrivez ici ce que vous voulez sauvegarder" bind:value={entry_details}></textarea>
-			<button class="btn btn-primary btn-block my-4" onclick={saveEntry} disabled={callPending || entry_details == ""}>Enregistrer</button>
+			<button class="btn btn-primary btn-block my-4" onclick={saveEntry} disabled={callPending}>Enregistrer</button>
 		{:else}
 			<div class="flex justify-center">
 				<span class="loading loading-spinner text-primary"></span>
