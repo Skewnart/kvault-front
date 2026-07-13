@@ -23,7 +23,7 @@
     let modalKey = $state<number>(0);
     let editingTitle = $state<boolean>(false);
     let titleInput = $state<String>("");
-    let toast = $state<{ message: string; alertType?: 'info' | 'success' | 'warning' | 'error'; onConfirm?: () => void } | undefined>(undefined);
+    let toast = $state<{ message: string; alertType?: 'info' | 'success' | 'warning' | 'error'; } | undefined>(undefined);
     let confirmDialog = $state<{ title: string; message: string; onConfirm?: () => void } | undefined>(undefined);
 
 	if (!props.data) {
@@ -143,8 +143,7 @@
     function showToast(alertType: 'info' | 'success' | 'warning' | 'error', message: string, onConfirm?: () => void) {
         toast = {
             message,
-			alertType,
-            onConfirm
+			alertType
         };
     }
 
@@ -222,8 +221,7 @@
 			visible={toast !== undefined}
 			message={toast?.message ?? ""}
 			alertType={toast?.alertType}
-			onConfirm={toast?.onConfirm}
-			onCancel={hideToast}
+			onTimeoutEnds={hideToast}
 		/>
 
 		<ConfirmDialog

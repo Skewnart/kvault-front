@@ -1,12 +1,11 @@
 <script lang="ts">
     import { onDestroy } from 'svelte';
 
-    let { visible = false, message = '', alertType = 'success', onConfirm, onCancel, duration = 3000 }: {
+    let { visible = false, message = '', alertType = 'success', onTimeoutEnds, duration = 3000 }: {
         visible?: boolean;
         message?: string;
         alertType?: 'info' | 'success' | 'warning' | 'error';
-        onConfirm?: () => void;
-        onCancel?: () => void;
+        onTimeoutEnds?: () => void;
         duration?: number;
     } = $props();
 
@@ -22,7 +21,7 @@
     function startTimeout() {
         clearToastTimeout();
         toastTimeout = setTimeout(() => {
-            onCancel?.();
+            onTimeoutEnds?.();
         }, duration);
     }
 
@@ -43,16 +42,6 @@
     <div class="toast toast-bottom toast-center">
         <div class="alert alert-{alertType} flex-col sm:flex-row gap-2">
             <span>{message}</span>
-            <div class="flex gap-2">
-                {#if onConfirm}
-                    <button class="btn btn-sm btn-error" type="button" onclick={() => {
-                        onConfirm?.();
-                    }}>Confirmer</button>
-                    <button class="btn btn-sm btn-ghost" type="button" onclick={() => {
-                        onCancel?.();
-                    }}>Annuler</button>
-                {/if}
-            </div>
         </div>
     </div>
 {/if}
