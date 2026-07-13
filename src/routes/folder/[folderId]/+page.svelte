@@ -6,6 +6,7 @@
 	
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
     import EntryDialog from './EntryDialog.svelte';
+    import ConfirmDialog from './ConfirmDialog.svelte';
     import Toast from './Toast.svelte';
     import type { EntryDTO } from '$lib/models/entry_dto';
     import { delete_by_id, delete_entries, get_encoded, post_encoded } from '$lib/api';
@@ -23,6 +24,7 @@
     let editingTitle = $state<boolean>(false);
     let titleInput = $state<String>("");
     let toast = $state<{ message: string; alertType?: 'info' | 'success' | 'warning' | 'error'; onConfirm?: () => void } | undefined>(undefined);
+    let confirmDialog = $state<{ title: string; message: string; onConfirm?: () => void } | undefined>(undefined);
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -148,18 +150,20 @@
 
     function requestDeleteCurrentFolder() {
         if (!folder) return;
-        toast = {
-            message: `Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`,
-			alertType: 'warning',
-            onConfirm: () => {
-                hideToast();
-                performDeleteCurrentFolder();
-            }
-        };
+		confirmDialog = {
+			title:"Confirmer la suppression",
+			message: `Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`,
+			onConfirm: performDeleteCurrentFolder
+		}
+    }
+
+    function cancelDeleteCurrentFolder() {
+        confirmDialog = undefined;
     }
 
     function performDeleteCurrentFolder() {
         if (!folder) return;
+        confirmDialog = undefined;
 
 		removeFolder(folder.id);
 		
@@ -220,6 +224,16 @@
 			alertType={toast?.alertType}
 			onConfirm={toast?.onConfirm}
 			onCancel={hideToast}
+		/>
+
+		<ConfirmDialog
+			visible={confirmDialog !== undefined}
+			title={confirmDialog?.title}
+			message={confirmDialog?.message}
+			confirmLabel="Supprimer"
+			cancelLabel="Annuler"
+			onConfirm={confirmDialog?.onConfirm}
+			onCancel={cancelDeleteCurrentFolder}
 		/>
 
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
