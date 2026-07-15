@@ -1,13 +1,25 @@
 <script lang="ts">
-    let { visible = false, title = 'Confirmer', message = '', confirmLabel = 'Confirmer', cancelLabel = 'Annuler', onConfirm, onCancel }: {
-        visible?: boolean;
+    export interface ConfirmParams {
         title?: string;
         message?: string;
         confirmLabel?: string;
         cancelLabel?: string;
         onConfirm?: () => void;
         onCancel?: () => void;
-    } = $props();
+    }
+
+    type ConfirmDialogProps = ConfirmParams & {
+        visible?: boolean;
+    };
+
+    let { visible = false,
+        title = 'Confirmer',
+        message = '',
+        confirmLabel = 'Confirmer',
+        cancelLabel = 'Annuler',
+        onConfirm,
+        onCancel
+    }: ConfirmDialogProps = $props();
 
     let dialog: HTMLDialogElement | null = null;
 

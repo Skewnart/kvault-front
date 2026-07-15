@@ -6,8 +6,8 @@
 	
 	import * as wasm from "$lib/wasm_pkg/kvault_wasm";
     import EntryDialog from './EntryDialog.svelte';
-    import ConfirmDialog from './ConfirmDialog.svelte';
-    import Toast from './Toast.svelte';
+    import ConfirmDialog, { type ConfirmParams } from '$lib/components/ConfirmDialog.svelte';
+    import Toast, { type ToastAlertType, type ToastParams } from '$lib/components/Toast.svelte';
     import type { EntryDTO } from '$lib/models/entry_dto';
     import { delete_by_id, delete_entries, get_encoded, post_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
@@ -23,8 +23,8 @@
     let modalKey = $state<number>(0);
     let editingTitle = $state<boolean>(false);
     let titleInput = $state<String>("");
-    let toast = $state<{ message: string; alertType?: 'info' | 'success' | 'warning' | 'error'; } | undefined>(undefined);
-    let confirmDialog = $state<{ title: string; message: string; onConfirm?: () => void } | undefined>(undefined);
+    let toast = $state<Pick<ToastParams, 'message' | 'alertType'> | undefined>(undefined);
+    let confirmDialog = $state<Pick<ConfirmParams, 'message'> | undefined>(undefined);
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -117,7 +117,7 @@
         storeFolder(folder);
 		sendFolders().then(() => {
 			editingTitle = false;
-			showToast('success', "Dossier sauvegardé !");
+			showToast("success", "Dossier sauvegardé !");
 		}).catch(err => {
 			console.error(err);
 			error = "Erreur lors de l'envoi des dossiers";
@@ -140,7 +140,7 @@
         toast = undefined;
     }
 
-    function showToast(alertType: 'info' | 'success' | 'warning' | 'error', message: string, onConfirm?: () => void) {
+    function showToast(alertType: ToastAlertType, message: string) {
         toast = {
             message,
 			alertType
@@ -150,9 +150,7 @@
     function requestDeleteCurrentFolder() {
         if (!folder) return;
 		confirmDialog = {
-			title:"Confirmer la suppression",
-			message: `Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`,
-			onConfirm: performDeleteCurrentFolder
+			message: `Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`
 		}
     }
 
@@ -219,18 +217,18 @@
 
 		<Toast
 			visible={toast !== undefined}
-			message={toast?.message ?? ""}
+			message={toast?.message}
 			alertType={toast?.alertType}
 			onTimeoutEnds={hideToast}
 		/>
 
 		<ConfirmDialog
 			visible={confirmDialog !== undefined}
-			title={confirmDialog?.title}
+			title="Confirmer la suppression"
 			message={confirmDialog?.message}
 			confirmLabel="Supprimer"
 			cancelLabel="Annuler"
-			onConfirm={confirmDialog?.onConfirm}
+			onConfirm={performDeleteCurrentFolder}
 			onCancel={cancelDeleteCurrentFolder}
 		/>
 

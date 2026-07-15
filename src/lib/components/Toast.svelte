@@ -1,13 +1,25 @@
 <script lang="ts">
     import { onDestroy } from 'svelte';
 
-    let { visible = false, message = '', alertType = 'success', onTimeoutEnds, duration = 3000 }: {
-        visible?: boolean;
+    export type ToastAlertType = 'info' | 'success' | 'warning' | 'error';
+    export interface ToastParams {
         message?: string;
-        alertType?: 'info' | 'success' | 'warning' | 'error';
+        alertType?: ToastAlertType;
         onTimeoutEnds?: () => void;
         duration?: number;
-    } = $props();
+    }
+
+    type ToastProps = ToastParams & {
+        visible?: boolean;
+    };
+
+    let {
+        visible = false,
+        message = '',
+        alertType = 'success',
+        onTimeoutEnds,
+        duration = 3000
+    }: ToastProps = $props();
 
     let toastTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
 
