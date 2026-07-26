@@ -7,20 +7,26 @@
     import { delete_by_id, get_encoded, put_encoded } from '$lib/api';
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
     import type { EncodedDTO } from '$lib/models/encoded_dto';
-    import { addEntryToFolder, getEntryById, getFolderById, getFolders, removeEntryFromFolder, removeFolder, storeFolder } from '$lib/session_storage_api';
+    import { addEntryToFolder, getEntryById, getFolderById, removeEntryFromFolder } from '$lib/session_storage_api';
     import { goto } from '$app/navigation';
+    import type { ToastAlertType, ToastParams } from '$lib/components/Toast.svelte';
+    import Toast from '$lib/components/Toast.svelte';
+    import type { ConfirmParams } from '$lib/components/ConfirmDialog.svelte';
+    import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	
 	const TITLE = "Kvault";
 
-	// TODO Faire popups "Données enregistrées" au clic enregistrements dans toutes les pages
-	// TODO Entrée dans la page Entry, ne pas afficher le mot de passe mais devoir appuyer sur un bouton, pareil pour l'édition
+	// TODO Ne pas afficher le mot de passe par défaut (pas faire l'appel non plus bien sûr)
+	// 		mais devoir appuyer sur un bouton. L'édition fait l'appel s'il n'est pas déjà affiché
 
 	const props = $props();
 	let error = $state("");
 	let entry = $state<EntryDTO | undefined>(undefined);
 	let entry_details = $state<string | undefined>(undefined);
 	let callPending = $state<boolean | undefined>(false);
-	
+    let toast = $state<Pick<ToastParams, 'message' | 'alertType'> | undefined>(undefined);
+    let confirmDialog = $state<Pick<ConfirmParams, 'message'> | undefined>(undefined);
+
 	// META INFOS VARS
     let editingMetaInfos = $state<boolean>(false);
     let nameInput = $state<String>("");
@@ -92,7 +98,7 @@
 		
 		put_encoded(token, "entry", data.entryId, enc_details_str).then(() => {
 			callPending = false;
-			alert("Données enregistrées !");
+			showToast("success", "Données enregistrées !");
 		}).catch(err => {
 			console.error(err);
 			error = "Erreur lors de l'envoi des informations";
@@ -117,7 +123,7 @@
         if (!entry) return;
         const trimmedName = nameInput.trim();
         if (!trimmedName) {
-            error = "Le nom de l'entrée ne peut pas être vide.";
+            error = "Le nom de l'accès ne peut pas être vide.";
             return;
         }
         entry.name = trimmedName;
@@ -126,10 +132,10 @@
 		addEntryToFolder(data.folderId, entry);
 		sendEntries().then(() => {
 			editingMetaInfos = false;
-			alert("Element sauvegardé !"); // todo à changer avec DaisyUI
+			showToast("success", "Accès sauvegardé !");
 		}).catch(err => {
 			console.error(err);
-			error = "Erreur lors de l'envoi des entrées";
+			error = "Erreur lors de l'envoi des accès";
         	editingMetaInfos = false;
 		});
     }
@@ -160,12 +166,21 @@
 		descriptionInput = entry.description;
         editingMetaInfos = true;
     }
-
+	
     function deleteCurrentEntry() {
         if (!entry) return;
-		// TODO faire une vraie modale pour demander la confirmation
-        const confirmed = window.confirm(`Supprimer le dossier "${entry.name}" ? Cette action est irréversible.`);
-        if (!confirmed) return;
+		confirmDialog = {
+			message: `Supprimer l'accès "${entry.name}" ? Cette action est irréversible.`
+		}
+    }
+
+    function cancelDeleteCurrentFolder() {
+        confirmDialog = undefined;
+    }
+
+    function performDeleteCurrentEntry() {
+        if (!entry) return;
+		confirmDialog = undefined;
 
 		removeEntryFromFolder(data.folderId, entry.id);
 		
@@ -179,6 +194,17 @@
 				editingMetaInfos = false;
 			});
 		});
+    }
+
+    function showToast(alertType: ToastAlertType, message: string) {
+        toast = {
+            message,
+			alertType
+        };
+    }
+
+    function hideToast() {
+        toast = undefined;
     }
 
 </script>
@@ -200,6 +226,23 @@
 			</div>
 		{/if}
 
+		<Toast
+			visible={toast !== undefined}
+			message={toast?.message}
+			alertType={toast?.alertType}
+			onTimeoutEnds={hideToast}
+		/>
+
+		<ConfirmDialog
+			visible={confirmDialog !== undefined}
+			title="Confirmer la suppression"
+			message={confirmDialog?.message}
+			confirmLabel="Supprimer"
+			cancelLabel="Annuler"
+			onConfirm={performDeleteCurrentEntry}
+			onCancel={cancelDeleteCurrentFolder}
+		/>
+
 		{#if editingMetaInfos}
 			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
 				<div class="flex-1">
@@ -208,7 +251,7 @@
 						type="text"
 						bind:value={nameInput}
 						onkeydown={handleTitleKeydown}
-						aria-label="Nom de l'entrée"
+						aria-label="Nom de l'accès"
 					/>
 				</div>
 				<div class="flex gap-2">
@@ -223,7 +266,7 @@
 						type="text"
 						bind:value={descriptionInput}
 						onkeydown={handleTitleKeydown}
-						aria-label="Description de l'entrée"
+						aria-label="Description de l'accès"
 					/>
 				</div>
 			</div>
