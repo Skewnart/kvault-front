@@ -11,8 +11,9 @@
 	const TITLE = "Kvault";
 
 	// TODO : Refaire le design sur toutes les pages APRES être passé sur toutes les pages pour les FEATURES qui ne changeront pas avec le design
-
-	// TODO Rediriger vers le logo quand le token est dépassé
+	// TODO : Rediriger vers le logo quand le token est dépassé
+	// TODO : Faire la recherche sur les deux pages concernées
+	// TODO : Faire une flèche pour revenir à la page précédente
 
 	const props = $props();
 	let error = $state("");
