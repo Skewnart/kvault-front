@@ -19,6 +19,9 @@
 	let error = $state("");
 	let folders = $state<FolderDTO[] | undefined>(undefined);
 	let modalKey = $state<number>(0);
+	// Recherche pour filtrer la liste des dossiers
+	let folderQuery = $state<string>("");
+	$: filteredFolders = folders ? folders.filter(f => f.name.toLowerCase().includes(folderQuery.toLowerCase())) : folders;
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -75,11 +78,16 @@
 		{/if}
 
 		{#if !!folders}
+			<div class="mb-2">
+				<input class="input input-bordered w-full" placeholder="Rechercher un dossier..." bind:value={folderQuery} aria-label="Recherche dossiers" />
+			</div>
 			<ul class="list bg-base-100 rounded-box shadow-md ">
-				<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Todo : Module de recherche</li>
+				{#if folderQuery && filteredFolders && filteredFolders.length === 0}
+					<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Aucun dossier ne correspond à la recherche</li>
+				{/if}
 			</ul>
 			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
-				{#each folders as folder}
+				{#each filteredFolders as folder}
 				<a href="/folder/{folder.id}" >
 					<li class="list-row" >
 						<div>

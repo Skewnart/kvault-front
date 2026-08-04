@@ -25,6 +25,9 @@
     let titleInput = $state<String>("");
     let toast = $state<Pick<ToastParams, 'message' | 'alertType'> | undefined>(undefined);
     let confirmDialog = $state<Pick<ConfirmParams, 'message'> | undefined>(undefined);
+    // Recherche pour filtrer la liste des accès (entrées)
+    let entryQuery = $state<string>("");
+    $: filteredEntries = entries ? entries.filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase())) : entries;
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -265,11 +268,16 @@
 		</div>
 
 		{#if !!entries}
+			<div class="mb-2">
+				<input class="input input-bordered w-full" placeholder="Rechercher un accès (nom ou description)..." bind:value={entryQuery} aria-label="Recherche accès" />
+			</div>
 			<ul class="list bg-base-100 rounded-box shadow-md ">
-				<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Todo : <a href="https://svelte.dev/tutorial/svelte/passing-snippets">Module de recherche</a></li>
+				{#if entryQuery && filteredEntries && filteredEntries.length === 0}
+					<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Aucun accès ne correspond à la recherche</li>
+				{/if}
 			</ul>
 			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
-				{#each entries as entry}
+				{#each filteredEntries as entry}
 				<a href="/folder/{data.folderId}/entry/{entry.id}" >
 					<li class="list-row" >
 						<div>
