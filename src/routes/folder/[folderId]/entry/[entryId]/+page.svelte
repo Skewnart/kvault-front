@@ -292,7 +292,7 @@
 		{/if}
 
 		{#if entry_details != undefined}
-			<textarea class="textarea" placeholder="Ecrivez ici ce que vous voulez sauvegarder" bind:value={entry_details}></textarea>
+			<textarea class="textarea w-full h-full" placeholder="Ecrivez ici ce que vous voulez sauvegarder" bind:value={entry_details}></textarea>
 			<button class="btn btn-primary btn-block my-4" onclick={saveEntry} disabled={callPending}>Enregistrer</button>
 		{:else}
 			<div class="flex justify-center">
