@@ -25,9 +25,9 @@
     let titleInput = $state<String>("");
     let toast = $state<Pick<ToastParams, 'message' | 'alertType'> | undefined>(undefined);
     let confirmDialog = $state<Pick<ConfirmParams, 'message'> | undefined>(undefined);
-    // Recherche pour filtrer la liste des accès (entrées)
+	
     let entryQuery = $state<string>("");
-    $: filteredEntries = entries ? entries.filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase())) : entries;
+    const filteredEntries = $derived(entries?.filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase())));
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";

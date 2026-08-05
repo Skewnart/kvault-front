@@ -12,16 +12,15 @@
 
 	// TODO : Refaire le design sur toutes les pages APRES être passé sur toutes les pages pour les FEATURES qui ne changeront pas avec le design
 	// TODO : Rediriger vers le logo quand le token est dépassé
-	// TODO : Faire la recherche sur les deux pages concernées
 	// TODO : Faire une flèche pour revenir à la page précédente
 
 	const props = $props();
 	let error = $state("");
 	let folders = $state<FolderDTO[] | undefined>(undefined);
 	let modalKey = $state<number>(0);
-	// Recherche pour filtrer la liste des dossiers
+		
 	let folderQuery = $state<string>("");
-	$: filteredFolders = folders ? folders.filter(f => f.name.toLowerCase().includes(folderQuery.toLowerCase())) : folders;
+	const filteredFolders = $derived(folders?.filter(f => f.name.toLowerCase().includes(folderQuery.toLowerCase())));
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
