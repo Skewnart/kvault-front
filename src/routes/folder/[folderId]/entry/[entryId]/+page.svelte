@@ -16,9 +16,6 @@
 	
 	const TITLE = "Kvault";
 
-	// TODO Ne pas afficher le mot de passe par défaut (pas faire l'appel non plus bien sûr)
-	// 		mais devoir appuyer sur un bouton. L'édition fait l'appel s'il n'est pas déjà affiché
-
 	const props = $props();
 	let error = $state("");
 	let entry = $state<EntryDTO | undefined>(undefined);
@@ -46,7 +43,6 @@
 	const token = data.token;
 	
 	onMount(async () => {
-		
 		await wasm.default();
 
 		const master_password = sessionStorage.getItem("mp");
@@ -58,12 +54,34 @@
 		if (user_envelope_session == null) {
 			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
 		}
+		// Ne pas déchiffrer automatiquement ici : attendre que l'utilisateur demande l'affichage
+		entry = getEntryById(data.folderId, data.entryId);
+	});
+
+	// Contrôle d'affichage du mot de passe : par défaut caché
+	let showPassword = $state<boolean>(false);
+
+	async function revealPassword() {
+		if (showPassword) return;
+		callPending = true;
+
+		const master_password = sessionStorage.getItem("mp");
+		if (master_password == null) {
+			error = "Le mot de passe maître ne peut pas être utilisé.";
+			callPending = false;
+			return;
+		}
+
+		const user_envelope_session = sessionStorage.getItem("envelope");
+		if (user_envelope_session == null) {
+			error = "L'enveloppe de chiffrement ne peut pas être récupéré.";
+			callPending = false;
+			return;
+		}
 		const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
 
-		entry = getEntryById(data.folderId, data.entryId);
-
-		const entry_encoded = await get_encoded(token, `entry/${data.entryId}`);
 		try {
+			const entry_encoded = await get_encoded(token, `entry/${data.entryId}`);
 			entry_details = wasm.read_encoded(
 				master_password!,
 				user_envelope.master_salt,
@@ -73,11 +91,19 @@
 				entry_encoded.enc_kyber,
 				entry_encoded.enc_nonce
 			).trim();
+			showPassword = true;
 		} catch (decryptError) {
 			error = "Mot de passe de chiffrement erroné";
-			return;
+		} finally {
+			callPending = false;
 		}
-	});
+	}
+
+	function hidePassword() {
+		// Effacer le contenu en clair de la variable pour plus de sécurité
+		entry_details = undefined;
+		showPassword = false;
+	}
 
 	function saveEntry() {
 		callPending = true;
@@ -291,12 +317,15 @@
 			</div>
 		{/if}
 
-		{#if entry_details != undefined}
+		{#if showPassword}
 			<textarea class="textarea w-full h-full" placeholder="Ecrivez ici ce que vous voulez sauvegarder" bind:value={entry_details}></textarea>
-			<button class="btn btn-primary btn-block my-4" onclick={saveEntry} disabled={callPending}>Enregistrer</button>
+			<div class="flex gap-2 my-4">
+				<button class="btn btn-primary" onclick={saveEntry} disabled={callPending}>Enregistrer</button>
+				<button class="btn btn-secondary" onclick={hidePassword} type="button">Masquer</button>
+			</div>
 		{:else}
-			<div class="flex justify-center">
-				<span class="loading loading-spinner text-primary"></span>
+			<div class="flex justify-center my-4">
+				<button class="btn btn-outline" onclick={revealPassword} disabled={callPending}>Afficher le mot de passe</button>
 			</div>
 		{/if}
 	</div>
