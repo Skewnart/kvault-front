@@ -199,6 +199,15 @@
 		return post_encoded(token, "folder", enc_folders_str);
 	}
 
+
+function goBack() {
+	if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+		window.history.back();
+	} else {
+		goto('/folder');
+	}
+}
+
 </script>
 
 <svelte:head>
@@ -207,7 +216,13 @@
 </svelte:head>
 
 <div class="flex justify-center">
-	<div class="md:w-3/4 w-full mt-4 mx-4">
+	<div class="md:w-3/4 w-full mt-4 mx-4 relative pt-12">
+			<button class="btn btn-ghost normal-case absolute top-2 flex items-center gap-2" type="button" aria-label="Retour" onclick={goBack}>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+				</svg>
+				<span>Précédent</span>
+			</button>
 		
 		{#if error}
 			<div role="alert" class="alert alert-error">
@@ -235,7 +250,7 @@
 			onCancel={cancelDeleteCurrentFolder}
 		/>
 
-		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 my-4">
 			{#if editingTitle}
 				<div class="flex-1">
 					<input

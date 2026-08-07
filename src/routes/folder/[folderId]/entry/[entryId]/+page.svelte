@@ -233,6 +233,15 @@
         toast = undefined;
     }
 
+
+function goBack() {
+	if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+		window.history.back();
+	} else {
+		goto(`/folder/${data.folderId}`);
+	}
+}
+
 </script>
 
 <svelte:head>
@@ -241,7 +250,13 @@
 </svelte:head>
 
 <div class="flex justify-center">
-	<div class="md:w-3/4 w-full mt-4 mx-4">
+	<div class="md:w-3/4 w-full mt-4 mx-4 relative pt-12">
+		<button class="btn btn-ghost normal-case absolute top-2 flex items-center gap-2" type="button" aria-label="Retour" onclick={goBack}>
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+			</svg>
+			<span>Précédent</span>
+		</button>
 		
 		{#if error}
 			<div role="alert" class="alert alert-error">
@@ -270,7 +285,7 @@
 		/>
 
 		{#if editingMetaInfos}
-			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 my-2">
 				<div class="flex-1">
 					<input
 						class="input input-bordered w-full"
@@ -297,7 +312,7 @@
 				</div>
 			</div>
 		{:else}
-			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
 				<h1 class="text-2xl font-bold">{entry?.name}</h1>
 				<div class="flex gap-2">
 					<button class="btn btn-square btn-ghost" type="button" aria-label="Modifier le dossier" onclick={startEditingMetaInformations}>
@@ -324,9 +339,13 @@
 				<button class="btn btn-secondary" onclick={hidePassword} type="button">Masquer</button>
 			</div>
 		{:else}
-			<div class="flex justify-center my-4">
-				<button class="btn btn-outline" onclick={revealPassword} disabled={callPending}>Afficher le mot de passe</button>
-			</div>
+			{#if callPending}
+				<span class="loading loading-dots loading-xl"></span>
+			{:else}
+				<div class="flex justify-center my-4">
+					<button class="btn btn-outline" onclick={revealPassword} disabled={callPending}>Afficher le mot de passe</button>
+				</div>
+			{/if}		
 		{/if}
 	</div>
 </div>
