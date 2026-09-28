@@ -65,6 +65,12 @@
 			const user_envelope = RegisterEnvelopeDTOFrom(user_envelope_session!);
 	
 			const entries_encoded = await get_encoded(token, `folder/${folder?.id}`);
+
+			if (entries_encoded == undefined) {
+				goto('/logout');
+				return;
+			}
+			
 			try {
 				entries = JSON.parse(wasm.read_encoded(
 					master_password!,

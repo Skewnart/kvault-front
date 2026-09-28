@@ -11,7 +11,8 @@
 	const TITLE = "Kvault";
 
 	// TODO : Refaire le design sur toutes les pages APRES être passé sur toutes les pages pour les FEATURES qui ne changeront pas avec le design
-	// TODO : Rediriger vers le logo quand le token est dépassé
+	// TODO : Faire de l'otp mail au lieu du mot de passe de connexion. (envoi mail uniquement en production)
+	// TODO : Enlever les gros blocs de log dans la console pour le back
 
 	const props = $props();
 	let error = $state("");

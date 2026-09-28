@@ -82,6 +82,12 @@
 
 		try {
 			const entry_encoded = await get_encoded(token, `entry/${data.entryId}`);
+
+			if (entry_encoded == undefined) {
+				goto('/logout');
+				return;
+			}
+			
 			entry_details = wasm.read_encoded(
 				master_password!,
 				user_envelope.master_salt,
