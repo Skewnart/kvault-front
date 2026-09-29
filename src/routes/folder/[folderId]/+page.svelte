@@ -13,6 +13,7 @@
     import { RegisterEnvelopeDTOFrom } from '$lib/models/register_envelope_dto';
     import { addAllEntriesToFolder, getFolderById, getFolders, removeFolder, storeFolder } from '$lib/session_storage_api';
     import type { EncodedDTO } from '$lib/models/encoded_dto';
+	import EntryDetailsDialog from './EntryDetailsDialog.svelte';
 
     const TITLE = "Kvault";
 
@@ -20,6 +21,8 @@
     let error = $state("");
     let folder = $state<FolderDTO | undefined>(undefined);
     let entries = $state<EntryDTO[] | undefined>(undefined);
+	let selectedEntry = $state<EntryDTO | undefined>(undefined);
+	let copyingEntryId = $state<String | undefined>(undefined);
     let modalKey = $state<number>(0);
     let editingTitle = $state<boolean>(false);
     let titleInput = $state<String>("");
@@ -27,7 +30,7 @@
     let confirmDialog = $state<Pick<ConfirmParams, 'message'> | undefined>(undefined);
 	
     let entryQuery = $state<string>("");
-    const filteredEntries = $derived(entries?.filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase())));
+	const filteredEntries = $derived((entries ?? []).filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase())));
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -91,9 +94,61 @@
 		}
 	});
 
-	function openEntry(e: Event, id: String) {
-		e.preventDefault();
-		goto(`/folder/${data.folderId}/entry/${id}`);
+	function openEntry(entry: EntryDTO) {
+		selectedEntry = entry;
+	}
+
+	async function copyEntryPassword(entry: EntryDTO) {
+		if (copyingEntryId !== undefined) return;
+		copyingEntryId = entry.id;
+		error = '';
+
+		try {
+			const masterPassword = sessionStorage.getItem('mp');
+			if (!masterPassword) throw new Error('Le mot de passe maître ne peut pas être utilisé.');
+
+			const envelopeSession = sessionStorage.getItem('envelope');
+			if (!envelopeSession) throw new Error("L'enveloppe de chiffrement ne peut pas être récupérée.");
+			const envelope = RegisterEnvelopeDTOFrom(envelopeSession);
+
+			const encoded = await get_encoded(token, `entry/${entry.id}`);
+			if (!encoded) {
+				goto('/logout');
+				return;
+			}
+
+			let password: string;
+			try {
+				password = wasm.read_encoded(
+					masterPassword,
+					envelope.master_salt,
+					envelope.enc_sk,
+					envelope.sk_nonce,
+					encoded.encoded,
+					encoded.enc_kyber,
+					encoded.enc_nonce
+				).trim();
+			} catch {
+				throw new Error('Mot de passe de chiffrement erroné.');
+			}
+
+			await navigator.clipboard.writeText(password);
+			showToast('success', 'Mot de passe copié !');
+		} catch (copyError) {
+			console.error(copyError);
+			error = copyError instanceof Error ? copyError.message : 'Impossible de copier le mot de passe.';
+		} finally {
+			copyingEntryId = undefined;
+		}
+	}
+
+	function updateEntry(updatedEntry: EntryDTO) {
+		entries = entries?.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry);
+	}
+
+	function removeEntry(entryId: String) {
+		entries = entries?.filter(entry => entry.id !== entryId);
+		selectedEntry = undefined;
 	}
 
 	async function addEntry() {
@@ -160,8 +215,8 @@
         if (!folder) return;
 		confirmDialog = {
 			message: `Supprimer le dossier "${folder.name}" ? Cette action est irréversible.`
-		}
-    }
+		};
+	}
 
     function cancelDeleteCurrentFolder() {
         confirmDialog = undefined;
@@ -185,7 +240,7 @@
 					error = "Erreur lors de la suppression des dossiers";
 					editingTitle = false;
 				});
-			})
+			});
 		});
     }
 
@@ -292,41 +347,59 @@ function goBack() {
 			<div class="mb-2">
 				<input class="input input-bordered w-full" placeholder="Rechercher un accès (nom ou description)..." bind:value={entryQuery} aria-label="Recherche accès" />
 			</div>
-			<ul class="list bg-base-100 rounded-box shadow-md ">
+			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
 				{#if entryQuery && filteredEntries && filteredEntries.length === 0}
 					<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Aucun accès ne correspond à la recherche</li>
 				{/if}
-			</ul>
-			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
 				{#each filteredEntries as entry}
-				<a href="/folder/{data.folderId}/entry/{entry.id}" >
-					<li class="list-row" >
-						<div>
-							<svg xmlns="http://www.w3.org/2000/svg" class="size-10" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-								<path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-								<rect x="5" y="10" width="14" height="11" rx="2.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
-								<path d="M12 14v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-							</svg>
-						</div>
-						<div class="content-center">
-							<div>{entry.name}</div>
-						</div>
-						<div class="content-center">
-							<div>{entry.description}</div>
-						</div>
-						<button class="btn btn-square btn-ghost" aria-label="entry-open-{entry.id}" onclick={(e) => openEntry(e, entry.id)}>
-							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="black" width="16px" height="16px" viewBox="0 0 24 24">
-								<path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
+					<li class="list-row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+						<button class="flex w-full min-w-0 items-center gap-4 text-left cursor-pointer" type="button" aria-label="Ouvrir {entry.name}" onclick={() => openEntry(entry)}>
+							<div class="shrink-0">
+								<svg xmlns="http://www.w3.org/2000/svg" class="size-10" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+									<path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+									<rect x="5" y="10" width="14" height="11" rx="2.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+									<path d="M12 14v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+								</svg>
+							</div>
+							<div class="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:gap-4">
+								<div class="content-center truncate">{entry.name}</div>
+								<div class="content-center truncate text-right">{entry.description}</div>
+							</div>
 						</button>
+						<div class="flex shrink-0 items-center gap-1">
+							<button class="btn btn-square btn-ghost" type="button" aria-label="Copier le mot de passe de {entry.name}" title="Copier le mot de passe" onclick={() => copyEntryPassword(entry)} disabled={copyingEntryId !== undefined}>
+								{#if copyingEntryId === entry.id}
+									<span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+								{:else}
+									<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+										<rect x="8" y="8" width="12" height="13" rx="2" stroke-linejoin="round" />
+										<path d="M16 8V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h2" stroke-linecap="round" />
+									</svg>
+								{/if}
+							</button>
+							<button class="btn btn-square btn-ghost" type="button" aria-label="Ouvrir {entry.name}" onclick={() => openEntry(entry)}>
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+									<path d="M4 12H20M20 12L14 6M20 12L14 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+							</button>
+						</div>
 					</li>
-				</a>
 				{/each}
 			</ul>
 			<button class="btn btn-primary btn-block my-4" onclick={addEntry}>Ajouter un accès</button>
 			{#key modalKey}
 				<EntryDialog {token} folderId={folder?.id} bind:entries/>
 			{/key}
+			{#if selectedEntry}
+				<EntryDetailsDialog
+					{token}
+					folderId={data.folderId}
+					entry={selectedEntry}
+					onClose={() => selectedEntry = undefined}
+					onUpdated={updateEntry}
+					onDeleted={removeEntry}
+				/>
+			{/if}
 		{:else}
 			<div class="flex justify-center">
 				<span class="loading loading-spinner text-primary"></span>
