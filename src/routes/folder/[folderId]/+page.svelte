@@ -229,7 +229,6 @@
 		removeFolder(folder.id);
 		
 		const entryIds: number[] = (folder.entries ?? []).map(entry => Number(entry.id));
-		console.log("entryIds", entryIds);
 		delete_entries(token, entryIds).then(() => {
 			delete_by_id(token, "folder", Number(folder?.id)).then(() => {
 				sendFolders().then(() => {
