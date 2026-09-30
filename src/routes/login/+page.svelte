@@ -52,7 +52,7 @@
 			try {
 				const login_response = await login(username, password);
 				if (login_response.status !== 200) {
-					error = "Mot de passe de connexion erroné";
+					error = await login_response.text();
 					callPending = false;
 					return;
 				}
