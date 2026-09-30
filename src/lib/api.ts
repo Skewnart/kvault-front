@@ -44,7 +44,7 @@ export async function get_envelope(token: String) : Promise<RegisterEnvelopeDTO>
 	);
 }
 
-export async function get_encoded(token: String, endpoint: String) : Promise<EncodedDTO> {
+export async function get_encoded(token: String, endpoint: String) : Promise<EncodedDTO | undefined> {
 	
 	return fetch(`${PUBLIC_API_URL}/${endpoint}`, {
 		method: 'GET',
@@ -52,8 +52,12 @@ export async function get_encoded(token: String, endpoint: String) : Promise<Enc
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${token}`
 		}
-	}).then(response => 
-		response.text().then(encoded_str => {
+	}).then(response => {
+		if (!response.ok) {
+			return undefined;
+		}
+
+		return response.text().then(encoded_str => {
 			const encoded_json : EncodedDTO = JSON.parse(encoded_str).enc_data;
 			const encoded: EncodedDTO = {
 				enc_kyber: new Uint8Array(Object.values(encoded_json.enc_kyber)),
@@ -62,7 +66,11 @@ export async function get_encoded(token: String, endpoint: String) : Promise<Enc
 			};
 
 			return encoded;
-		})
+		});
+	})
+	.catch(() => {
+			return undefined;
+		}
 	);
 }
 
@@ -96,7 +104,7 @@ export async function put_encoded(token: String, endpoint: String, id: number, b
 
 export async function delete_by_id(token: String, endpoint: String, id: number) : Promise<string> {
 	return fetch(`${PUBLIC_API_URL}/${endpoint}/${id}`, {
-		method: 'POST',
+		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${token}`
@@ -108,8 +116,8 @@ export async function delete_by_id(token: String, endpoint: String, id: number) 
 
 
 export async function delete_entries(token: String, ids : number[]) : Promise<string> {
-	return fetch(`${PUBLIC_API_URL}/entry/`, {
-		method: 'POST',
+	return fetch(`${PUBLIC_API_URL}/entry`, {
+		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${token}`

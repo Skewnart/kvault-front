@@ -63,7 +63,14 @@
 				let folder_encoded: EncodedDTO;
 				try {
 					user_envelope = await get_envelope(token);
-					folder_encoded = await get_encoded(token, "folder");
+					let encoded = await get_encoded(token, "folder");					
+
+					if (encoded == undefined) {
+						goto('/logout');
+						return;
+					}
+					
+					folder_encoded = encoded;
 				} catch (err) {
 					error = "Erreur lors de la réception des données de l'utilisateur";
 					callPending = false;
