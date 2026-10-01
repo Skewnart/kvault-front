@@ -14,9 +14,60 @@
 	let error = $state("");
 	let folders = $state<FolderDTO[] | undefined>(undefined);
 	let modalKey = $state<number>(0);
+	let searchInput = $state<HTMLInputElement>();
 		
 	let folderQuery = $state<string>("");
 	const filteredFolders = $derived(folders?.filter(f => f.name.toLowerCase().includes(folderQuery.toLowerCase())));
+
+	function handleGlobalKeydown(event: KeyboardEvent) {
+		const target = event.target;
+		const isEditable = target instanceof HTMLElement && (
+			target.isContentEditable ||
+			target instanceof HTMLInputElement ||
+			target instanceof HTMLTextAreaElement ||
+			target instanceof HTMLSelectElement
+		);
+		const focusedRow = target instanceof Element
+			? target.closest<HTMLAnchorElement>('[data-folder-result]')
+			: null;
+		const isInDialog = target instanceof Element && target.closest('dialog[open]') !== null;
+
+		if (event.key === 'Escape' && !isInDialog && (!isEditable || target === searchInput) && folderQuery) {
+			event.preventDefault();
+			folderQuery = '';
+			return;
+		}
+
+		if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !isInDialog && (!isEditable || target === searchInput)) {
+			const rows = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-folder-result]'));
+			if (rows.length > 0) {
+				const currentIndex = focusedRow ? rows.indexOf(focusedRow) : -1;
+				const nextIndex = event.key === 'ArrowDown'
+					? Math.min(currentIndex + 1, rows.length - 1)
+					: currentIndex < 0 ? rows.length - 1 : Math.max(currentIndex - 1, 0);
+
+				event.preventDefault();
+				rows[nextIndex].focus();
+			}
+			return;
+		}
+
+		if (event.key === 'Enter' && target === searchInput && folderQuery && filteredFolders?.length === 1) {
+			event.preventDefault();
+			goto(`/folder/${filteredFolders[0].id}`);
+			return;
+		}
+
+		if (event.key === '+' && !isEditable && !isInDialog && !event.ctrlKey && !event.metaKey && !event.altKey) {
+			event.preventDefault();
+			addFolder();
+			return;
+		}
+
+		if (!isEditable && !event.ctrlKey && !event.metaKey && !event.altKey && /^[\p{L}\p{N}]$/u.test(event.key)) {
+			searchInput?.focus();
+		}
+	}
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -60,6 +111,8 @@
 	<meta name="description" content="Svelte demo app" />
 </svelte:head>
 
+<svelte:window onkeydown={handleGlobalKeydown} />
+
 <div class="flex justify-center">
 	<div class="md:w-3/4 w-full mt-4 mx-4">
 		
@@ -74,7 +127,7 @@
 
 		{#if !!folders}
 			<div class="mb-2">
-				<input class="input input-bordered w-full" placeholder="Rechercher un dossier..." bind:value={folderQuery} aria-label="Recherche dossiers" />
+				<input bind:this={searchInput} class="input input-bordered w-full" placeholder="Écrivez pour commencer à chercher..." bind:value={folderQuery} aria-label="Recherche dossiers" />
 			</div>
 			<ul class="list bg-base-100 rounded-box shadow-md ">
 				{#if folderQuery && filteredFolders && filteredFolders.length === 0}
@@ -82,8 +135,8 @@
 				{/if}
 			</ul>
 			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
-				{#each filteredFolders as folder}
-				<a href="/folder/{folder.id}" >
+				{#each filteredFolders ?? [] as folder}
+				<a data-folder-result href="/folder/{folder.id}" class="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
 					<li class="list-row" >
 						<div>
 							<svg xmlns="http://www.w3.org/2000/svg" class="size-10" fill="none" viewBox="0 0 24 24" aria-hidden="true">
@@ -102,7 +155,7 @@
 				</a>
 				{/each}
 			</ul>
-			<button class="btn btn-primary btn-block my-4" onclick={addFolder}> Ajouter un dossier</button>
+			<button class="btn btn-primary btn-block my-4" onclick={addFolder}> Ajouter un dossier (+)</button>
 			{#key modalKey}
 				<FolderDialog {token} bind:folders/>
 			{/key}

@@ -30,6 +30,7 @@
     let confirmDialog = $state<Pick<ConfirmParams, 'message'> | undefined>(undefined);
 	
     let entryQuery = $state<string>("");
+	let searchInput = $state<HTMLInputElement>();
 	const filteredEntries = $derived((entries ?? []).filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase())));
 
 	if (!props.data) {
@@ -96,6 +97,66 @@
 
 	function openEntry(entry: EntryDTO) {
 		selectedEntry = entry;
+	}
+
+	function handleGlobalKeydown(event: KeyboardEvent) {
+		const target = event.target;
+		const isEditable = target instanceof HTMLElement && (
+			target.isContentEditable ||
+			target instanceof HTMLInputElement ||
+			target instanceof HTMLTextAreaElement ||
+			target instanceof HTMLSelectElement
+		);
+		const focusedRow = target instanceof Element
+			? target.closest<HTMLElement>('[data-entry-row]')
+			: null;
+		const isInDialog = target instanceof Element && target.closest('dialog[open]') !== null;
+
+		if (event.key === 'Escape' && !isInDialog && (!isEditable || target === searchInput)) {
+			event.preventDefault();
+			if (entryQuery) {
+				entryQuery = '';
+				return;
+			}
+			goBack();
+			return;
+		}
+
+		if (event.key === 'Backspace' && !isInDialog && !isEditable) {
+			event.preventDefault();
+			goBack();
+			return;
+		}
+
+		if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !isInDialog && (!isEditable || target === searchInput)) {
+			const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-entry-row]'));
+			if (rows.length > 0) {
+				const currentIndex = focusedRow ? rows.indexOf(focusedRow) : -1;
+				const nextIndex = event.key === 'ArrowDown'
+					? Math.min(currentIndex + 1, rows.length - 1)
+					: currentIndex < 0 ? rows.length - 1 : Math.max(currentIndex - 1, 0);
+
+				event.preventDefault();
+				rows[nextIndex].querySelector<HTMLButtonElement>('[data-entry-result]')?.focus();
+			}
+			return;
+		}
+
+		if (event.key === 'Enter' && target === searchInput && entryQuery && filteredEntries.length === 1) {
+			event.preventDefault();
+			openEntry(filteredEntries[0]);
+			return;
+		}
+
+		if (event.key === '+' && !isEditable && !isInDialog && !event.ctrlKey && !event.metaKey && !event.altKey) {
+			event.preventDefault();
+			addEntry();
+			return;
+		}
+
+		if (!isEditable && !isInDialog && !event.ctrlKey && !event.metaKey && !event.altKey && /^[\p{L}\p{N}]$/u.test(event.key)) {
+			searchInput?.focus();
+		}
 	}
 
 	async function copyEntryPassword(entry: EntryDTO) {
@@ -275,6 +336,8 @@ function goBack() {
 	<meta name="description" content="Svelte demo app" />
 </svelte:head>
 
+<svelte:window onkeydown={handleGlobalKeydown} />
+
 <div class="flex justify-center">
 	<div class="md:w-3/4 w-full mt-4 mx-4 relative pt-12">
 			<button class="btn btn-ghost normal-case absolute top-2 flex items-center gap-2" type="button" aria-label="Retour" onclick={goBack}>
@@ -344,15 +407,15 @@ function goBack() {
 
 		{#if !!entries}
 			<div class="mb-2">
-				<input class="input input-bordered w-full" placeholder="Rechercher un accès (nom ou description)..." bind:value={entryQuery} aria-label="Recherche accès" />
+				<input bind:this={searchInput} class="input input-bordered w-full" placeholder="Écrivez pour commencer à chercher..." bind:value={entryQuery} aria-label="Recherche accès" />
 			</div>
 			<ul class="list bg-base-100 rounded-box shadow-md mt-4">
 				{#if entryQuery && filteredEntries && filteredEntries.length === 0}
 					<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Aucun accès ne correspond à la recherche</li>
 				{/if}
 				{#each filteredEntries as entry}
-					<li class="list-row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-						<button class="flex w-full min-w-0 items-center gap-4 text-left cursor-pointer" type="button" aria-label="Ouvrir {entry.name}" onclick={() => openEntry(entry)}>
+					<li data-entry-row class="list-row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+						<button data-entry-result class="flex w-full min-w-0 items-center gap-4 text-left cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="button" aria-label="Ouvrir {entry.name}" onclick={() => openEntry(entry)}>
 							<div class="shrink-0">
 								<svg xmlns="http://www.w3.org/2000/svg" class="size-10" fill="none" viewBox="0 0 24 24" aria-hidden="true">
 									<path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
@@ -385,7 +448,7 @@ function goBack() {
 					</li>
 				{/each}
 			</ul>
-			<button class="btn btn-primary btn-block my-4" onclick={addEntry}>Ajouter un accès</button>
+			<button class="btn btn-primary btn-block my-4" onclick={addEntry}>Ajouter un accès (+)</button>
 			{#key modalKey}
 				<EntryDialog {token} folderId={folder?.id} bind:entries/>
 			{/key}
