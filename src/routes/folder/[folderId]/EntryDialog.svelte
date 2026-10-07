@@ -10,11 +10,17 @@
 
 	let entryName = $state("");
 	let entryDescription = $state("");
+	let entryPassword = $state("");
 	let error = $state("");
 	let callPending = $state(false);
 	
 	function submitEntry(e: Event) {
 		e.preventDefault();
+
+		if (!entryPassword.trim()) {
+			error = "Le mot de passe est obligatoire.";
+			return;
+		}
 
 		callPending = true;
 		error = "";
@@ -29,7 +35,7 @@
 
 		let enc_entry_details:wasm.Encoded;
 		try {
-			enc_entry_details = wasm.create_encoded(" ", envelope.pk);
+			enc_entry_details = wasm.create_encoded(entryPassword.trim(), envelope.pk);
 		} catch(error) {
 			console.error(error);
 			error = "Les fonctions de chiffrement n'ont pas fonctionné";
@@ -123,8 +129,19 @@
 						placeholder="Description"
 						bind:value={entryDescription}
 						disabled={callPending}
-						required
 					/>
+				</label>
+				<label class="form-control mt-6">
+					<span class="label-text mb-1">Mot de passe</span>
+					<textarea
+						id="entryPassword"
+						class="textarea textarea-bordered w-full min-h-32"
+						autocomplete="off"
+						placeholder="Mot de passe"
+						bind:value={entryPassword}
+						disabled={callPending}
+						required
+					></textarea>
 				</label>
 			</div>
 		
