@@ -131,11 +131,10 @@
 						disabled={callPending}
 					/>
 				</label>
-				<label class="form-control mt-6">
-					<span class="label-text mb-1">Mot de passe</span>
+				<label class="form-control">
 					<textarea
 						id="entryPassword"
-						class="textarea textarea-bordered w-full min-h-32"
+						class="textarea textarea-bordered w-full min-h-32 mt-2"
 						autocomplete="off"
 						placeholder="Mot de passe"
 						bind:value={entryPassword}

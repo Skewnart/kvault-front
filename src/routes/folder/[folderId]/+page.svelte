@@ -31,7 +31,11 @@
 	
     let entryQuery = $state<string>("");
 	let searchInput = $state<HTMLInputElement>();
-	const filteredEntries = $derived((entries ?? []).filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase())));
+	const filteredEntries = $derived(
+		(entries ?? [])
+		.filter(e => ((e.name ?? "") + " " + (e.description ?? "")).toLowerCase().includes(entryQuery.toLowerCase()))
+		.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+	);
 
 	if (!props.data) {
 		error = "Erreur pendant le chargement des données sur le serveur";
@@ -116,6 +120,10 @@
 			event.preventDefault();
 			if (entryQuery) {
 				entryQuery = '';
+				return;
+			}
+			if (target === searchInput) {
+				searchInput?.blur();
 				return;
 			}
 			goBack();
