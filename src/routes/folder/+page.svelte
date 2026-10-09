@@ -17,7 +17,11 @@
 	let searchInput = $state<HTMLInputElement>();
 		
 	let folderQuery = $state<string>("");
-	const filteredFolders = $derived(folders?.filter(f => f.name.toLowerCase().includes(folderQuery.toLowerCase())));
+	const filteredFolders = $derived(
+		folders
+		?.filter(f => f.name.toLowerCase().includes(folderQuery.toLowerCase()))
+		.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+	);
 
 	function handleGlobalKeydown(event: KeyboardEvent) {
 		const target = event.target;
@@ -32,9 +36,13 @@
 			: null;
 		const isInDialog = target instanceof Element && target.closest('dialog[open]') !== null;
 
-		if (event.key === 'Escape' && !isInDialog && (!isEditable || target === searchInput) && folderQuery) {
+		if (event.key === 'Escape' && !isInDialog && (!isEditable || target === searchInput) && (folderQuery || target === searchInput)) {
 			event.preventDefault();
-			folderQuery = '';
+			if (folderQuery) {
+				folderQuery = '';
+			} else {
+				searchInput?.blur();
+			}
 			return;
 		}
 
