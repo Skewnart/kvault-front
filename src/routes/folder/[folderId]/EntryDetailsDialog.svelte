@@ -37,6 +37,8 @@
 	let error = $state('');
 	let toast = $state<Pick<ToastParams, 'message' | 'alertType'> | undefined>(undefined);
 	let confirmDialog = $state<Pick<ConfirmParams, 'message'> | undefined>(undefined);
+	let copyPasswordButton = $state<HTMLButtonElement | undefined>(undefined);
+	let revealPasswordButton = $state<HTMLButtonElement | undefined>(undefined);
 
 	onMount(async () => {
 		try {
@@ -79,6 +81,37 @@
 			showPassword = true;
 		} catch (decryptError) {
 			error = decryptError instanceof Error ? decryptError.message : 'Mot de passe de chiffrement erroné';
+		} finally {
+			callPending = false;
+		}
+	}
+
+	async function copyPassword() {
+		callPending = true;
+		error = '';
+		try {
+			const masterPassword = sessionStorage.getItem('mp');
+			if (!masterPassword) throw new Error('Le mot de passe maître ne peut pas être utilisé.');
+			const envelope = getEnvelope();
+			const encoded = await get_encoded(token, `entry/${currentEntry.id}`);
+			if (!encoded) {
+				goto('/logout');
+				return;
+			}
+			const password = wasm.read_encoded(
+				masterPassword,
+				envelope.master_salt,
+				envelope.enc_sk,
+				envelope.sk_nonce,
+				encoded.encoded,
+				encoded.enc_kyber,
+				encoded.enc_nonce
+			).trim();
+			await navigator.clipboard.writeText(password);
+			showToast('success', 'Mot de passe copié !');
+		} catch (copyError) {
+			console.error(copyError);
+			error = copyError instanceof Error ? copyError.message : 'Impossible de copier le mot de passe.';
 		} finally {
 			callPending = false;
 		}
@@ -191,9 +224,36 @@
 	function showToast(alertType: ToastAlertType, message: string) {
 		toast = { message, alertType };
 	}
+
+	function handlePasswordShortcut(event: KeyboardEvent) {
+		if (
+			event.altKey ||
+			event.ctrlKey ||
+			event.metaKey ||
+			event.shiftKey ||
+			event.repeat ||
+			editingMetaInfos ||
+			showPassword ||
+			callPending
+		) return;
+
+		const target = event.target;
+		if (target instanceof HTMLElement && (
+			target.isContentEditable ||
+			target.closest('input, textarea, select, [role="textbox"]')
+		)) return;
+
+		if (event.key.toLowerCase() === 'c') {
+			event.preventDefault();
+			copyPasswordButton?.click();
+		} else if (event.key.toLowerCase() === 'v') {
+			event.preventDefault();
+			revealPasswordButton?.click();
+		}
+	}
 </script>
 
-<dialog bind:this={dialog} class="modal" onclose={onClose}>
+<dialog bind:this={dialog} class="modal" onclose={onClose} onkeydown={handlePasswordShortcut}>
 	<div class="modal-box max-w-2xl">
 		<div class="flex items-start justify-between gap-4">
 			{#if editingMetaInfos}
@@ -249,10 +309,15 @@
 				<button class="btn btn-secondary" type="button" onclick={() => editingMetaInfos = false} disabled={callPending}>Annuler</button>
 			</div>
 		{:else}
-			<p class="mt-2 whitespace-pre-wrap">{currentEntry.description}</p>
-			<div class="divider">Mot de passe</div>
+			<p class="mt whitespace-pre-wrap">{currentEntry.description}</p>
+
 			{#if showPassword}
-				<textarea class="textarea textarea-bordered w-full min-h-32" aria-label="Mot de passe" bind:value={entryDetails} disabled={callPending}></textarea>
+				<div class="mt-4">
+					<label class="form-control">
+						<span class="label-text mb-1">Mot de passe</span>
+						<textarea class="textarea textarea-bordered w-full min-h-32 mt-4" aria-label="Mot de passe" bind:value={entryDetails} disabled={callPending}></textarea>
+					</label>
+				</div>
 				<div class="modal-action">
 					<button class="btn btn-primary" type="button" onclick={savePassword} disabled={callPending}>Enregistrer</button>
 					<button class="btn btn-secondary" type="button" onclick={hidePassword} disabled={callPending}>Masquer</button>
@@ -260,8 +325,22 @@
 			{:else if callPending}
 				<div class="flex justify-center"><span class="loading loading-dots loading-xl"></span></div>
 			{:else}
-				<div class="flex justify-center">
-					<button class="btn btn-outline" type="button" onclick={revealPassword}>Afficher le mot de passe</button>
+				<div class="flex items-center justify-start gap-1 mt-4">
+					<strong>Mot de passe caché</strong>
+					<button bind:this={copyPasswordButton} class="btn btn-ghost" type="button" aria-label="Copier le mot de passe" aria-keyshortcuts="c" title="Copier le mot de passe (c)" onclick={copyPassword} disabled={callPending}>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<rect x="8" y="8" width="12" height="12" rx="2" stroke-linecap="round" stroke-linejoin="round" />
+							<path stroke-linecap="round" stroke-linejoin="round" d="M16 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2h3" />
+						</svg>
+						<span>(c)</span>
+					</button>
+					<button bind:this={revealPasswordButton} class="btn btn-ghost" type="button" style="padding-inline:0px;" aria-label="Afficher le mot de passe" aria-keyshortcuts="v" title="Afficher le mot de passe (v)" onclick={revealPassword} disabled={callPending}>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12z" />
+							<circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+						<span>(v)</span>
+					</button>
 				</div>
 			{/if}
 		{/if}

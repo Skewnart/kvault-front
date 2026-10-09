@@ -3,7 +3,7 @@
 ## Maintenant
 
 - Global :
-	- Navigation clavier (tous les liens d'une page + retours)
+	NONE
 
 ## Peut-être plus tard
 
